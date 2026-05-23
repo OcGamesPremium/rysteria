@@ -94,6 +94,30 @@ struct rr_petal_base_stat_scale const defensive[rr_rarity_id_max] = {
     {432.0*1000000000000000, 42.0*500000000000000  }, // rr_rarity_id_prime
 };
 
+struct rr_petal_base_stat_scale const mixed[rr_rarity_id_max] = {
+//   hp                      dmg
+    {1.0,                    1.0                   }, // rr_rarity_id_common,
+    {2.0,                    2.0                   }, // rr_rarity_id_unusual,
+    {4.0,                    4.0                   }, // rr_rarity_id_rare,
+    {8.0,                    8.0                   }, // rr_rarity_id_epic,
+    {16.0,                   16.0                  }, // rr_rarity_id_legendary,
+    {48.0,                   48.0                  }, // rr_rarity_id_mythic,
+    {144.0,                  144.0                 }, // rr_rarity_id_exotic,
+    {432.0,                  432.0                 }, // rr_rarity_id_ultimate,
+    {432.0*7.5,              432.0*7.5             }, // rr_rarity_id_quantum,
+    {432.0*75,               432.0*75              }, // rr_rarity_id_aurous,
+    {432.0*750,              432.0*750             }, // rr_rarity_id_eternal,
+    {432.0*7500,             432.0*7500            }, // rr_rarity_id_hyper,
+    {432.0*75000,            432.0*75000           }, // rr_rarity_id_sunshine,
+    {432.0*750000,           432.0*750000          }, // rr_rarity_id_nebula,
+    {432.0*7500000,          432.0*7500000         }, // rr_rarity_id_infinity,
+    {432.0*75000000,         432.0*75000000        }, // rr_rarity_id_calamity,
+    {432.0*750000000,        432.0*750000000       }, // rr_rarity_id_unique,
+    {432.0*7500000000,       432.0*7500000000      }, // rr_rarity_id_cosmic,
+    {432.0*75000000000,      432.0*75000000000     }, // rr_rarity_id_galactic
+    {432.0*7500000000000,    432.0*7500000000000   }, // rr_rarity_id_ethereal,
+    {432.0*750000000000000,  432.0*750000000000000 }, // rr_rarity_id_prime
+
 struct rr_petal_data RR_PETAL_DATA[rr_petal_id_max] = {
 //   id                         min_rarity              scale          dmg        hp   clump     cd   2cd  count
     {rr_petal_id_none,          rr_rarity_id_common,    offensive,    0.0f,     0.0f,   0.0f,     0,    0, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
