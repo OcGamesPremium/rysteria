@@ -509,6 +509,12 @@ static void crafting_xp_text_animate(struct rr_ui_element *this,
     case rr_rarity_id_cosmic:
         data->text = "900 Qa xp per craft";
         break;
+    case rr_rarity_id_ethereal:
+        data->text = "100 Sx xp per craft";
+        break;
+    case rr_rarity_id_prime:
+        data->text = "10 No xp per craft";
+        break;
     }
 }
 
