@@ -1,3 +1,5 @@
+// Copyright (C) 2026 Lazur
+
 const path = require("path");
 const fs = require("fs");
 

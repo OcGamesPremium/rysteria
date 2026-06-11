@@ -1,3 +1,5 @@
+// Copyright (C) 2026 Lazur
+
 import { readFileSync } from 'fs';
 
 const db = JSON.parse(readFileSync('database.json', 'utf8'));

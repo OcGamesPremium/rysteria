@@ -1,5 +1,6 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
+// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -539,7 +540,7 @@ static int handle_lws_event(struct rr_server *this, struct lws *ws,
             // Read rivet token
             proto_bug_read_string(&encoder, client->rivet_account.token, 300,
                                   "rivet token");
-            // Read uuid
+            // Read uuids
             proto_bug_read_string(&encoder, client->rivet_account.uuid, 100,
                                   "rivet uuid");
             proto_bug_read_string(&encoder, client->rivet_account.code, 100,
