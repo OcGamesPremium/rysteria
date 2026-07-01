@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -34,15 +33,13 @@ void rr_component_mob_render(EntityIdx entity, struct rr_game *game,
         rr_simulation_get_physical(simulation, entity);
     struct rr_component_mob *mob = rr_simulation_get_mob(simulation, entity);
     uint8_t is_friendly =
-        mob->player_spawned &&
         game->player_info != NULL &&
         game->player_info->flower_id != RR_NULL_ENTITY &&
         is_same_team(
             rr_simulation_get_relations(simulation,
                                         game->player_info->flower_id)->team,
             rr_simulation_get_relations(simulation, entity)->team);
-    if ((mob->id == rr_mob_id_trex || mob->id == rr_mob_id_meteor || mob->id == rr_mob_id_king_mackarel) &&
-        is_friendly)
+    if (is_friendly)
         rr_renderer_add_color_filter(renderer, 0xffffff63, 0.3);
     uint8_t has_arena = rr_simulation_has_arena(simulation, entity);
     struct rr_component_health *health;
@@ -56,8 +53,9 @@ void rr_component_mob_render(EntityIdx entity, struct rr_game *game,
     rr_renderer_scale(renderer, 1 + physical->deletion_animation * 0.5);
     rr_renderer_rotate(renderer, physical->lerp_angle);
     rr_renderer_scale(renderer, RR_MOB_RARITY_SCALING[mob->rarity].radius);
-    if (mob->id == rr_mob_id_meteor)
+    if (mob->id == rr_mob_id_meteor || mob->id == rr_mob_id_shiny_meteor)
     {
+        rr_renderer_rotate(renderer, physical->animation_timer);
         struct rr_simulation_animation *particle =
             rr_particle_alloc(&game->default_particle_manager,
                               rr_animation_type_default);

@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -32,6 +31,10 @@ struct rr_component_petal
 {
     EntityIdx parent_id;
     RR_SERVER_ONLY(int8_t spin_ccw;)
+    RR_SERVER_ONLY(int16_t living_fire_trail_ticks;)
+    RR_SERVER_ONLY(uint8_t living_fire_trail_count;)
+    RR_SERVER_ONLY(uint8_t living_fire_trail_age[8];)
+    RR_SERVER_ONLY(struct rr_vector living_fire_trail_positions[8];)
     uint8_t detached;
     uint8_t id;
     uint8_t rarity;
@@ -41,6 +44,10 @@ struct rr_component_petal
     RR_SERVER_ONLY(EntityHash bind_target;)
     RR_SERVER_ONLY(struct rr_vector bind_pos;)
     RR_SERVER_ONLY(uint32_t aggro_count;)
+    RR_SERVER_ONLY(float emerald_bonus_percent;)
+    RR_SERVER_ONLY(uint8_t ruby_spawned_count;)
+    RR_SERVER_ONLY(EntityHash ruby_spawned_mobs[30];)
+    RR_SERVER_ONLY(uint16_t ruby_spawned_lifespan[30];)
     RR_SERVER_ONLY(struct rr_component_player_info_petal_slot *slot;)
     RR_SERVER_ONLY(struct rr_component_player_info_petal *p_petal;)
 };

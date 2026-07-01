@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -320,7 +319,7 @@ uint8_t high_zone_filter(struct rr_simulation *simulation, EntityIdx seeker,
                          EntityIdx target, void *captures)
 {
     struct rr_component_mob *mob = rr_simulation_get_mob(simulation, seeker);
-    if (mob->rarity < rr_rarity_id_galactic)
+    if (mob->rarity < rr_rarity_id_prime)
         return 1;
     struct rr_component_physical *physical =
         rr_simulation_get_physical(simulation, seeker);

@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -23,12 +22,9 @@
 void rr_discord_oauth2_read_data(void *_this, void *_decoder) {
     struct rr_game *this = _this;
     struct proto_bug *decoder = _decoder;
-    proto_bug_read_string(decoder, this->rivet_account.uuid,
-                          sizeof this->rivet_account.uuid, "uuid");
-    proto_bug_read_string(decoder, this->rivet_account.token,
-                          sizeof this->rivet_account.token, "token");
-    proto_bug_read_string(decoder, this->rivet_account.name,
-                          sizeof this->rivet_account.name, "name");
+    proto_bug_read_string(decoder, this->rivet_account.uuid, sizeof this->rivet_account.uuid, "uuid");
+    proto_bug_read_string(decoder, this->rivet_account.token, sizeof this->rivet_account.token, "token");
+    proto_bug_read_string(decoder, this->rivet_account.name, sizeof this->rivet_account.name, "name");
     this->rivet_account.code[0] = 0;
     if (this->rivet_account.name[0])
         this->account_linked = 1;
@@ -42,7 +38,7 @@ void rr_discord_oauth2_link_account() {
     EM_ASM({
         const state = crypto.randomUUID();
         const url = new URL("https://discord.com/oauth2/authorize");
-        url.searchParams.set("client_id", "1453525695228678349");
+        url.searchParams.set("client_id", "1507743046442291300");
         url.searchParams.set("response_type", "code");
         url.searchParams.set("redirect_uri", window.location.origin + window.location.pathname);
         url.searchParams.set("scope", "identify guilds.join");

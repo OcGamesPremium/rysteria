@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -40,6 +39,8 @@ struct rr_component_player_info_petal
 {
     EntityHash entity_hash;
     float cooldown_ticks;
+    float secondary_cooldown_ticks;
+    RR_SERVER_ONLY(float emerald_bonus_percent;)
 };
 
 struct rr_component_player_info_petal_slot
@@ -49,6 +50,7 @@ struct rr_component_player_info_petal_slot
     uint8_t rarity;
     uint8_t client_cooldown;
     uint8_t client_health;
+    uint16_t client_emerald_bonus;
     RR_SERVER_ONLY(uint8_t count;)
 };
 
@@ -59,6 +61,7 @@ struct rr_player_info_modifiers
     float petal_extension;
     // float rotation_direction;
     float reload_speed;
+    float secondary_reload_speed;
 };
 
 struct rr_component_player_info
@@ -110,6 +113,8 @@ RR_SERVER_ONLY(void rr_component_player_info_set_slot_cd(
                    struct rr_component_player_info *, uint8_t, uint8_t);)
 RR_SERVER_ONLY(void rr_component_player_info_set_slot_hp(
                    struct rr_component_player_info *, uint8_t, uint8_t);)
+RR_SERVER_ONLY(void rr_component_player_info_set_emerald_bonus(
+                   struct rr_component_player_info *, uint8_t, uint16_t);)
 RR_SERVER_ONLY(void rr_component_player_info_set_update_loot(
                    struct rr_component_player_info *);)
 RR_SERVER_ONLY(

@@ -1,5 +1,3 @@
-// Copyright (C) 2026 Lazur
-
 import { readFileSync } from 'fs';
 
 const db = JSON.parse(readFileSync('database.json', 'utf8'));
@@ -40,12 +38,12 @@ for (const uuid in db) {
     for (const item in db[uuid].mob_gallery)
         db[uuid].mobs += db[uuid].mob_gallery[item];
     db[uuid].level = level_from_xp(db[uuid].xp);
-    db[uuid].id = uuid.split('-')[0];
+    db[uuid].discord_id = uuid.split('-')[0];
     arr.push(db[uuid]);
 }
 
 console.log(new Date());
-console.log('#', 'uuid', 'xp', 'lvl', 'exos', 'aatts', 'mobs', 'discord');
+console.log('#', 'uuid', 'xp', 'lvl', 'exos', 'aatts', 'mobs', 'discord_id');
 
 console.log('sorted by xp');
 arr.sort((a, b) => b.xp - a.xp);

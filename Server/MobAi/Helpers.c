@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -235,7 +234,7 @@ void tick_return_to_higher_zone(EntityIdx entity,
         return;
     }
     struct rr_component_mob *mob = rr_simulation_get_mob(simulation, entity);
-    if (mob->rarity < rr_rarity_id_galactic)
+    if (mob->rarity < rr_rarity_id_prime)
         return;
     struct rr_component_arena *arena =
         rr_simulation_get_arena(simulation, physical->arena);

@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -38,12 +37,12 @@ void rr_component_drop_render(EntityIdx entity, struct rr_game *game,
         if (drop->id == rr_petal_id_bone || drop->id == rr_petal_id_lightning ||
             drop->id == rr_petal_id_third_eye || drop->id == rr_petal_id_nest ||
             drop->id == rr_petal_id_meat)
-            min_rarity = game->significant_rarity >= 3 ?
-                             game->significant_rarity - 3 : 0;
+            min_rarity = game->significant_rarity >= 3 ? game->significant_rarity - 3 : 0;
         if (drop->id == rr_petal_id_seed || drop->id == rr_petal_id_peas ||
             drop->id == rr_petal_id_magnet || drop->id == rr_petal_id_uranium ||
             drop->id == rr_petal_id_fireball || drop->id == rr_petal_id_basic ||
-            drop->id == rr_petal_id_meteor)
+            drop->id == rr_petal_id_meteor || drop->id == rr_petal_id_shiny_meteor ||
+            drop->id == rr_petal_id_square)
             min_rarity = 0;
         if (drop->rarity < min_rarity)
             return;

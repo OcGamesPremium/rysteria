@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -120,57 +119,62 @@ enum rr_rarity_id
 
 enum rr_petal_id
 {
-    rr_petal_id_none,          // 0
-    rr_petal_id_basic,         // 1
-    rr_petal_id_pellet,        // 2
-    rr_petal_id_fossil,        // 3
-    rr_petal_id_stinger,       // 4
-    rr_petal_id_berry,         // 5
-    rr_petal_id_shell,         // 6
-    rr_petal_id_peas,          // 7
-    rr_petal_id_leaf,          // 8
-    rr_petal_id_egg,           // 9
-    rr_petal_id_magnet,        // 10
-    rr_petal_id_uranium,       // 11
-    rr_petal_id_feather,       // 12
-    rr_petal_id_azalea,        // 13
-    rr_petal_id_bone,          // 14
-    rr_petal_id_web,           // 15
-    rr_petal_id_seed,          // 16
-    rr_petal_id_gravel,        // 17
-    rr_petal_id_club,          // 18
-    rr_petal_id_crest,         // 19
-    rr_petal_id_droplet,       // 20
-    rr_petal_id_beak,          // 21
-    rr_petal_id_lightning,     // 22
-    rr_petal_id_third_eye,     // 23
-    rr_petal_id_nest,          // 24
-    rr_petal_id_fireball,      // 25
-    rr_petal_id_meat,          // 26
-    rr_petal_id_bubble,        // 27
-    rr_petal_id_meteor,        // 28
-    
+    rr_petal_id_none,            // 0
+    rr_petal_id_basic,           // 1
+    rr_petal_id_pellet,          // 2
+    rr_petal_id_fossil,          // 3
+    rr_petal_id_stinger,         // 4
+    rr_petal_id_berry,           // 5
+    rr_petal_id_shell,           // 6
+    rr_petal_id_peas,            // 7
+    rr_petal_id_leaf,            // 8
+    rr_petal_id_egg,             // 9
+    rr_petal_id_magnet,          // 10
+    rr_petal_id_uranium,         // 11
+    rr_petal_id_feather,         // 12
+    rr_petal_id_azalea,          // 13
+    rr_petal_id_bone,            // 14
+    rr_petal_id_web,             // 15
+    rr_petal_id_seed,            // 16
+    rr_petal_id_gravel,          // 17
+    rr_petal_id_club,            // 18
+    rr_petal_id_crest,           // 19
+    rr_petal_id_droplet,         // 20
+    rr_petal_id_beak,            // 21
+    rr_petal_id_lightning,       // 22
+    rr_petal_id_third_eye,       // 23
+    rr_petal_id_nest,            // 24
+    rr_petal_id_fireball,        // 25
+    rr_petal_id_meat,            // 26
+    rr_petal_id_bubble,          // 27
+    rr_petal_id_meteor,          // 28
 
-    rr_petal_id_mandible,      // 29
-    rr_petal_id_wax,           // 30
-    rr_petal_id_sand,          // 31
-    rr_petal_id_mint,          // 32
+    rr_petal_id_mandible,        // 29
+    rr_petal_id_wax,             // 30
+    rr_petal_id_sand,            // 31
+    rr_petal_id_mint,            // 32
 
-    rr_petal_id_pearl,         // 33
-    rr_petal_id_rice,          // 34
-    rr_petal_id_sapphire,      // 35
-    rr_petal_id_ruby,          // 36
-    rr_petal_id_golden_leaf,   // 37
-    rr_petal_id_diamond_leaf,  // 38
-    rr_petal_id_emerald_leaf,  // 39
-    rr_petal_id_amethyst_leaf, // 40
-    rr_petal_id_diamond,       // 41
-    rr_petal_id_golden_meteor, // 42
-    rr_petal_id_blood_stinger, // 43
-    rr_petal_id_rock,          // 44
-    rr_petal_id_fish_egg,      // 45
+    rr_petal_id_pearl,           // 33
+    rr_petal_id_rice,            // 34
+    rr_petal_id_sapphire,        // 35
+    rr_petal_id_ruby,            // 36
+    rr_petal_id_golden_leaf,     // 37
+    rr_petal_id_diamond_leaf,    // 38
+    rr_petal_id_dev_leaf,        // 39
+    rr_petal_id_emerald_amulet,  // 40
+    rr_petal_id_diamond,         // 41
+    rr_petal_id_shiny_meteor,    // 42
+    rr_petal_id_blood_stinger,   // 43
+    rr_petal_id_rock,            // 44
+    rr_petal_id_fish_egg,        // 45
+    rr_petal_id_living_fire,     // 46
+    rr_petal_id_emerald,         // 47
+    rr_petal_id_square,          // 48
+    rr_petal_id_obsidian,        // 49
+    rr_petal_id_opal,            // 50
+    rr_petal_id_stick,           // 51
 
-    rr_petal_id_max,           // 46
+    rr_petal_id_max,             // 52
 };
 
 enum rr_mob_id
@@ -195,11 +199,13 @@ enum rr_mob_id
     rr_mob_id_beehive,            // 16
     rr_mob_id_spider,             // 17
     rr_mob_id_house_centipede,    // 18
-    rr_mob_id_lanternfly,         // 19
-    rr_mob_id_tower,              // 20
-    rr_mob_id_king_mackarel,      // 21
+    //rr_mob_id_lanternfly,         // 19
+    rr_mob_id_tower,              // 19
+    rr_mob_id_king_mackarel,      // 20
+    rr_mob_id_shiny_meteor,       // 21
+    rr_mob_id_square,             // 22
 
-    rr_mob_id_max,                // 22
+    rr_mob_id_max,                // 23
 };
 
 struct rr_petal_base_stat_scale
@@ -225,7 +231,7 @@ struct rr_mob_data
     uint8_t ai_passive_rarity;
     uint8_t ai_neutral_rarity;
     uint8_t ai_aggro_rarity;
-    struct rr_loot_data loot[6];
+    struct rr_loot_data loot[7];
 };
 
 struct rr_petal_data
@@ -247,7 +253,8 @@ struct rr_petal_rarity_scale
     float seed_cooldown;
     float web_radius;
     float self_damage;
-    float size;
+    float fire_damage;
+    float petal_size;
 };
 
 struct rr_mob_rarity_scale
@@ -322,7 +329,7 @@ struct rr_maze_declaration
 
 // RR_DECLARE_MAZE(HELL_CREEK, 54)
 RR_DECLARE_MAZE(HELL_CREEK, 160)
-RR_DECLARE_MAZE(BURROW, 16)
+RR_DECLARE_MAZE(BURROW, 8)
 
 extern struct rr_maze_declaration RR_MAZES[rr_biome_id_max];
 

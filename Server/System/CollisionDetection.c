@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -61,6 +60,7 @@ static void system_insert_entities(EntityIdx entity, void *_captures)
     rr_spatial_hash_insert(
         &rr_simulation_get_arena(this, physical->arena)->spatial_hash, entity);
 }
+
 static uint8_t should_entities_collide(struct rr_simulation *this, EntityIdx a,
                                        EntityIdx b)
 {

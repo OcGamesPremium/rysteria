@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -73,7 +72,7 @@ EntityIdx rr_simulation_alloc_player(struct rr_simulation *this,
                                   player_info->level);
     rr_simulation_get_flower(this, flower_id)->saved_angle = physical->angle;
     rr_component_health_set_max_health(
-        health, 200 * pow(1.0256, player_info->level - 1));
+        health, 100 * pow(1.0512, player_info->level - 1));
     rr_component_health_set_health(health, health->max_health);
     health->damage = health->max_health * 0.1;
     health->damage_paused = 25;
@@ -227,6 +226,13 @@ EntityIdx rr_simulation_alloc_mob(struct rr_simulation *this,
         physical->mass *= 25;
         team_id = rr_simulation_team_id_players;
     }
+/*
+    else if (mob_id == rr_mob_id_shiny_meteor)
+    {
+        physical->mass *= 50;
+        team_id = rr_simulation_team_id_players;
+    }
+*/
     rr_component_relations_set_team(relations, team_id);
     rr_component_relations_update_root_owner(this, relations);
     ai->aggro_range = 800 * sqrtf(rarity_id + 1);
@@ -245,19 +251,40 @@ EntityIdx rr_simulation_alloc_mob(struct rr_simulation *this,
         rr_component_arena_set_biome(arena, rr_biome_id_beehive);
         rr_component_arena_spatial_hash_init(arena, this);
         set_respawn_zone(arena, 0, 0);
-        for (uint32_t X = 0; X < arena->maze->maze_dim; ++X)
+        uint8_t min_rarity = rarity_id > 3 ? rarity_id - 3 : 0;
+
+        for (uint8_t i = 0; i < 15; ++i)
         {
-            for (uint32_t Y = 0; Y < arena->maze->maze_dim; ++Y)
+            uint8_t spawn_rarity = i < 3 ? rarity_id
+                                         : min_rarity +
+                                               (uint8_t)(rr_frand() *
+                                                         (rarity_id -
+                                                          min_rarity + 1));
+            float spawn_x = 0;
+            float spawn_y = 0;
+            uint8_t found = 0;
+            for (uint16_t attempt = 0; attempt < 1000; ++attempt)
             {
+                uint32_t X = (uint32_t)(rr_frand() * arena->maze->maze_dim);
+                uint32_t Y = (uint32_t)(rr_frand() * arena->maze->maze_dim);
+                if (X >= arena->maze->maze_dim)
+                    X = arena->maze->maze_dim - 1;
+                if (Y >= arena->maze->maze_dim)
+                    Y = arena->maze->maze_dim - 1;
                 uint8_t v = rr_component_arena_get_grid(arena, X, Y)->value;
                 if (v == 0 || (v & 8))
                     continue;
-                ++arena->mob_count;
-                rr_simulation_alloc_mob(
-                    this, entity, (X + rr_frand()) * arena->maze->grid_size,
-                    (Y + rr_frand()) * arena->maze->grid_size,
-                    rr_mob_id_honeybee, rarity_id, team_id);
+                spawn_x = (X + rr_frand()) * arena->maze->grid_size;
+                spawn_y = (Y + rr_frand()) * arena->maze->grid_size;
+                found = 1;
+                break;
             }
+            if (!found)
+                continue;
+            ++arena->mob_count;
+            rr_simulation_alloc_mob(this, entity, spawn_x, spawn_y,
+                                    rr_mob_id_honeybee, spawn_rarity,
+                                    team_id);
         }
     }
     else

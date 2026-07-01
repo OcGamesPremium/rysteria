@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -97,6 +96,12 @@ static void system_for_each(EntityIdx entity, void *simulation)
         break;
     case rr_mob_id_meteor:
         tick_ai_meteor(entity, this);
+        break;
+    case rr_mob_id_shiny_meteor:
+        tick_ai_shiny_meteor(entity, this);
+        break;
+    case rr_mob_id_square:
+        tick_ai_square(entity, this);
         break;
     case rr_mob_id_pteranodon:
         tick_ai_pteranodon(entity, this);

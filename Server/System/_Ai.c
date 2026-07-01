@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -724,6 +723,78 @@ static void tick_ai_aggro_meteor(EntityIdx entity,
     }
 }
 
+static void tick_ai_aggro_shiny_meteor(EntityIdx entity,
+                                 struct rr_simulation *simulation)
+{
+    struct rr_component_ai *ai = rr_simulation_get_ai(simulation, entity);
+    struct rr_component_physical *physical =
+        rr_simulation_get_physical(simulation, entity);
+
+    switch (ai->ai_state)
+    {
+    case rr_ai_state_idle:
+        ai->ai_state = rr_ai_state_idle_moving;
+        float angle = rr_frand() * 2 * M_PI;
+        rr_vector_from_polar(&physical->acceleration, RR_PLAYER_SPEED * 0.2,
+                             angle);
+        break;
+    case rr_ai_state_idle_moving:
+    {
+        float angle = rr_vector_theta(&physical->velocity);
+        struct rr_vector position = {physical->x, physical->y};
+        if (rr_vector_get_magnitude(&position) >= 3924392) // fix
+        {
+            float tangent = rr_vector_theta(&position);
+            angle = tangent - (M_PI - (tangent - angle));
+        }
+        rr_vector_from_polar(&physical->acceleration, RR_PLAYER_SPEED * 0.2,
+                             angle);
+        rr_vector_from_polar(&physical->velocity, 3, angle);
+        rr_component_physical_set_angle(physical, physical->angle + 0.1);
+        ai->ticks_until_next_action = 10;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+static void tick_ai_aggro_square(EntityIdx entity,
+                                 struct rr_simulation *simulation)
+{
+    struct rr_component_ai *ai = rr_simulation_get_ai(simulation, entity);
+    struct rr_component_physical *physical =
+        rr_simulation_get_physical(simulation, entity);
+
+    switch (ai->ai_state)
+    {
+    case rr_ai_state_idle:
+        ai->ai_state = rr_ai_state_idle_moving;
+        float angle = rr_frand() * 2 * M_PI;
+        rr_vector_from_polar(&physical->acceleration, RR_PLAYER_SPEED * 0.2,
+                             angle);
+        break;
+    case rr_ai_state_idle_moving:
+    {
+        float angle = rr_vector_theta(&physical->velocity);
+        struct rr_vector position = {physical->x, physical->y};
+        if (rr_vector_get_magnitude(&position) >= 3924392) // fix
+        {
+            float tangent = rr_vector_theta(&position);
+            angle = tangent - (M_PI - (tangent - angle));
+        }
+        rr_vector_from_polar(&physical->acceleration, RR_PLAYER_SPEED * 0.2,
+                             angle);
+        rr_vector_from_polar(&physical->velocity, 3, angle);
+        rr_component_physical_set_angle(physical, physical->angle + 0.1);
+        ai->ticks_until_next_action = 10;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 static void tick_ai_aggro_quetzalcoatlus(EntityIdx entity,
                                          struct rr_simulation *simulation)
 {
@@ -1051,6 +1122,12 @@ static void system_for_each(EntityIdx entity, void *simulation)
         break;
     case rr_mob_id_meteor:
         tick_ai_aggro_meteor(entity, this);
+        break;
+    case rr_mob_id_shiny_meteor:
+        tick_ai_aggro_shiny_meteor(entity, this);
+        break;
+    case rr_mob_id_square:
+        tick_ai_aggro_square(entity, this);
         break;
     case rr_mob_id_quetzalcoatlus:
         tick_ai_aggro_quetzalcoatlus(entity, this);

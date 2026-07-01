@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -23,8 +22,14 @@
 
 #include <Server/Client.h>
 #include <Server/EntityDetection.h>
+#include <Server/EntityAllocation.h>
 #include <Server/Simulation.h>
 #include <Shared/Bitset.h>
+#include <Shared/Component/Petal.h>
+#include <Shared/Component/PlayerInfo.h>
+#include <Shared/Component/Relations.h>
+
+#define RR_RUBY_SPAWN_LIFETIME (10 * 25)
 
 struct colliding_with_captures
 {
@@ -69,6 +74,10 @@ static void system_default_idle_heal(EntityIdx entity, void *captures)
         if (rr_simulation_has_flower(this, entity))
             rr_component_flower_set_dead(rr_simulation_get_flower(this, entity),
                                          this, 1);
+        else if (rr_simulation_has_petal(this, entity))
+        {
+            rr_simulation_request_entity_deletion(this, entity);
+        }
         else
             rr_simulation_request_entity_deletion(this, entity);
     }
@@ -164,6 +173,7 @@ static void lightning_petal_system(struct rr_simulation *simulation,
         rr_simulation_request_entity_deletion(simulation, petal->parent_id);
 }
 
+
 struct fireball_captures
 {
     struct rr_simulation *simulation;
@@ -243,6 +253,71 @@ static void fireball_petal_system(struct rr_simulation *simulation,
         rr_simulation_request_entity_deletion(simulation, petal->parent_id);
 }
 
+static float beak_stun_duration_seconds(struct rr_component_petal *petal)
+{
+    switch (petal->rarity)
+    {
+    case rr_rarity_id_common:
+        return 1.0f;
+    case rr_rarity_id_unusual:
+        return 1.2f;
+    case rr_rarity_id_rare:
+        return 1.38f;
+    case rr_rarity_id_epic:
+        return 1.62f;
+    case rr_rarity_id_legendary:
+        return 1.91f;
+    case rr_rarity_id_mythic:
+        return 2.24f;
+    case rr_rarity_id_exotic:
+        return 2.63f;
+    case rr_rarity_id_ultimate:
+        return 3.09f;
+    case rr_rarity_id_quantum:
+        return 3.63f;
+    case rr_rarity_id_aurous:
+        return 4.27f;
+    case rr_rarity_id_eternal:
+        return 5.01f;
+    case rr_rarity_id_hyper:
+        return 5.89f;
+    case rr_rarity_id_sunshine:
+        return 6.93f;
+    case rr_rarity_id_nebula:
+        return 8.13f;
+    case rr_rarity_id_infinity:
+        return 9.56f;
+    case rr_rarity_id_calamity:
+        return 11.23f;
+    case rr_rarity_id_unique:
+        return 13.2f;
+    case rr_rarity_id_cosmic:
+        return 15.51f;
+    case rr_rarity_id_galactic:
+        return 18.23f;
+    default:
+        return 20.0f;
+    }
+}
+
+static void apply_petal_stun(struct rr_simulation *simulation,
+                              EntityIdx target,
+                              struct rr_component_petal *petal)
+{
+    struct rr_component_physical *physical =
+        rr_simulation_get_physical(simulation, target);
+    if (petal->id == rr_petal_id_beak)
+    {
+        float duration = beak_stun_duration_seconds(petal) * 25.0f;
+        physical->stun_ticks = (uint32_t)fmaxf(
+            (float)physical->stun_ticks, duration);
+    }
+    else if (petal->id == rr_petal_id_sapphire)
+    {
+        physical->stun_ticks = ~0u;
+    }
+}
+
 static uint8_t damage_effect(struct rr_simulation *simulation, EntityIdx target,
                              EntityIdx attacker)
 {
@@ -301,14 +376,10 @@ static uint8_t damage_effect(struct rr_simulation *simulation, EntityIdx target,
                         RR_PETAL_DATA[petal->id].scale[petal->rarity].damage /
                         RR_PETAL_DATA[petal->id].count[petal->rarity];
         }
-        else if (petal->id == rr_petal_id_beak)
+        else if (petal->id == rr_petal_id_beak ||
+                 petal->id == rr_petal_id_sapphire)
         {
-            struct rr_component_physical *physical =
-                rr_simulation_get_physical(simulation, target);
-            physical->stun_ticks =
-                25 *
-                (1 + sqrtf(RR_PETAL_RARITY_SCALE[petal->rarity].heal) / 3) *
-                (1 - physical->slow_resist);
+            apply_petal_stun(simulation, target, petal);
         }
         else if (petal->id == rr_petal_id_lightning)
         {
@@ -365,6 +436,7 @@ static void colliding_with_function(uint64_t i, void *_captures)
             rr_component_health_do_damage(
                 this, health1, entity2, health2->damage,
                 rr_animation_color_type_damage);
+                
             health1->damage_paused = byp2 ? 3 : 8;
         }
     }
@@ -375,9 +447,11 @@ static void colliding_with_function(uint64_t i, void *_captures)
             rr_component_health_do_damage(
                 this, health2, entity1, health1->damage,
                 rr_animation_color_type_damage);
+
             health2->damage_paused = byp2 ? 3 : 8;
         }
     }
+
 }
 
 static void system_for_each_function(EntityIdx entity, void *_captures)

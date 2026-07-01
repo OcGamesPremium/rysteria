@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -35,7 +34,7 @@ const PASSWORD_SALT = process.env["PASSWORD_SALT"] || "";
 const CLOUD_TOKEN = "cloud.eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.CKOM_-XtMRCjtLqo-DAaEgoQjUflOmYrT3Sv5ckk4-Nk0yIWOhQKEgoQ6l7BiqssS-iYCw6PaqKKnA.Pgw_qDBaugBIFd7ilYcbbm_6yPNDeqreiDi1VBkKX84ER7CXvS-8abNuRhKtU_hDtgT9Sd4a7JWN68fdLnEKCA";
 const NAMESPACE_ID = "04cfba67-e965-4899-bcb9-b7497cc6863b";
 const SERVER_SECRET = "ad904nf3adrgnariwpanyf3qap8unri4t9b384wna3g34ytgdr4bwtvd4y";
-const CLIENT_ID = "1453525695228678349";
+const CLIENT_ID = "1507743046442291300";
 const CLIENT_SECRET = process.env["CLIENT_SECRET"] || "";
 const BOT_TOKEN = process.env["BOT_TOKEN"] || "";
 const MAX_PETAL_COUNT = 28;
@@ -121,7 +120,7 @@ function apply_missing_defaults(account)
         password: "",
         username: "",
         xp: 0,
-        petals: {"1:0": 5},
+        petals: {"1:0": 3625},
         failed_crafts: {},
         mob_gallery: {},
         checkpoint: 0,
@@ -222,7 +221,7 @@ function get_today()
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-based
     const year = String(date.getFullYear()).slice(-2); // Last two digits of year
 
-    return `${month}${day}${year}`;
+    return `${day}${month}${year}`;
 }
 
 function get_unique_petals(petals)
@@ -291,7 +290,7 @@ async function discord_oauth2(code) {
         body: new URLSearchParams({
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": "https://rysteria.pro/",
+            "redirect_uri": "https://upgraded-xylophone-p7jjjxpgwjqxcr9gx-8080.app.github.dev/",
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET
         })
@@ -473,6 +472,10 @@ wss.on("connection", (ws, req) => {
                             user = await db_read_or_create_user(database.links[discord], SERVER_SECRET);
                     }
                     user.password = hash(user.username + PASSWORD_SALT);
+                    //if (discord && (!user.discord_id || user.discord_id !== discord)) {
+                    //    user.discord_id = discord;
+                    //    await write_db_entry(user.username, user);
+                    //}
                     write_db_entry(user.username, user);
                     connected_clients[user.username] = new GameClient(user, game_server.alias, nonce, await discord_name(user.discord_id));
                     game_server.clients[pos] = user.username;

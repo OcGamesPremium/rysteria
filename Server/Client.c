@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -236,7 +235,7 @@ void rr_server_client_craft_petal(struct rr_server_client *this,
                 rr_simulation_get_health(&server->simulation,
                                          this->player_info->flower_id);
             rr_component_health_set_max_health(health,
-                                               200 * pow(1.0256, level - 1));
+                                               100 * pow(1.0512, level - 1));
             health->damage = health->max_health * 0.1;
         }
     }

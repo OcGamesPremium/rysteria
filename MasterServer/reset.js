@@ -1,5 +1,3 @@
-// Copyright (C) 2026 Lazur
-
 const path = require("path");
 const fs = require("fs");
 
@@ -37,7 +35,7 @@ main: for (const id in db) {
         }
     } else {
         for (let petal = 0; petal < MAX_PETAL_COUNT; petal++) {
-            for (let rarity = 0; rarity < 8; rarity++) {
+            for (let rarity = 0; rarity < 21; rarity++) {
                 const item = `${petal}:${rarity}`;
                 if (item in acc.petals) {
                     const amount = acc.petals[item];

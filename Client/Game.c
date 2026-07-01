@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -187,7 +186,7 @@ static void rr_game_autocraft_tick(struct rr_game *this, float delta)
     if (!this->crafting_data.autocraft || this->crafting_data.animation > 0 ||
         this->crafting_data.autocraft_animation > 0)
         return;
-    for (uint8_t id = 1; id <= rr_petal_id_meteor; ++id)
+    for (uint8_t id = 1; id <= rr_petal_id_max - 1; ++id)
     {
         uint32_t sum = 0;
         for (uint8_t rarity = 0; rarity < rr_rarity_id_max; ++rarity)
@@ -495,7 +494,7 @@ void rr_game_init(struct rr_game *this)
                             /*
                             rr_ui_h_container_init(rr_ui_container_init(), 0, 10,
                                 rr_ui_biome_button_init("Hell Creek", 0xffff0000, 0),
-                                rr_ui_biome_button_init("Ocean", 0xffcdb423, 1),
+                                rr_ui_biome_button_init("Garden", 0xffcdb423, 1),
                                 NULL
                             ),
                             */
@@ -1240,8 +1239,8 @@ void rr_game_websocket_on_event_function(enum rr_websocket_event_type type,
                 proto_bug_read_varuint(&encoder, "last attempts");
             this->crafting_data.temp_xp =
                 proto_bug_read_float64(&encoder, "craft xp");
-            this->crafting_data.animation =
-                powf(1.25, this->crafting_data.crafting_rarity);
+            /*this->crafting_data.animation =
+                powf(1.25, this->crafting_data.crafting_rarity);*/
             if (this->crafting_data.temp_successes == 0)
                 this->crafting_data.animation *=
                     (5 - (this->crafting_data.count -
@@ -1476,6 +1475,7 @@ void rr_write_dev_cheat_packets(struct rr_game *this, uint8_t force)
     cheat_flags |= this->dev_cheats.no_wall_collision << 3;
     cheat_flags |= this->dev_cheats.no_collision << 4;
     cheat_flags |= this->dev_cheats.no_grid_influence << 5;
+    cheat_flags |= this->dev_cheats.no_drop << 6;
     if (force || cheat_flags != this->dev_cheats.flags_last_tick)
     {
         this->dev_cheats.flags_last_tick = cheat_flags;
@@ -1655,7 +1655,7 @@ void rr_game_tick(struct rr_game *this, float delta)
                 if (this->selected_biome == 0)
                     rr_renderer_draw_tile_hell_creek(this->renderer,
                                                      tile_index);
-                else
+                else if (this->selected_biome == 1)
                     rr_renderer_draw_tile_garden(this->renderer, tile_index);
                 rr_renderer_context_state_free(this->renderer, &state);
             }

@@ -209,12 +209,16 @@ static void system_velocity(EntityIdx id, void *simulation)
     {
         if (!rr_simulation_has_petal(simulation, id))
             physical->acceleration_scale = 0;
+        physical->velocity.x = 0;
+        physical->velocity.y = 0;
         --physical->stun_ticks;
     }
     if (physical->pachy_stun_ticks > 0)
     {
         if (!rr_simulation_has_petal(simulation, id))
             physical->acceleration_scale *= 0.5;
+        physical->velocity.x *= 0.5f;
+        physical->velocity.y *= 0.5f;
         --physical->pachy_stun_ticks;
     }
     if (physical->shell_ignore_ticks > 0)

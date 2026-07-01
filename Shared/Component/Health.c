@@ -51,10 +51,124 @@ void rr_component_health_free(struct rr_component_health *this,
 }
 
 #ifdef RR_SERVER
+#include <math.h>
+#include <stdio.h>
+
 #include <Server/Client.h>
+#include <Server/EntityAllocation.h>
 #include <Server/Simulation.h>
 
+#include <Shared/Component/Petal.h>
+#include <Shared/Component/PlayerInfo.h>
+#include <Shared/Component/Relations.h>
 #include <Shared/StaticData.h>
+#include <Shared/Utilities.h>
+
+#define RR_RUBY_SPAWN_LIFETIME (10 * 25)
+#define RR_RUBY_SPAWN_MAX_MOBS 30
+
+static EntityIdx rr_health_get_player_ruby_petal(
+    struct rr_simulation *simulation,
+    struct rr_component_player_info *player_info)
+{
+    for (uint32_t outer = 0; outer < player_info->slot_count; ++outer)
+    {
+        struct rr_component_player_info_petal_slot *slot =
+            &player_info->slots[outer];
+        for (uint32_t inner = 0; inner < 6; ++inner)
+        {
+            EntityHash hash = slot->petals[inner].entity_hash;
+            if (hash == RR_NULL_ENTITY)
+                continue;
+            if (!rr_simulation_entity_alive(simulation, hash))
+                continue;
+            EntityIdx entity = (EntityIdx)hash;
+            if (!rr_simulation_has_petal(simulation, entity))
+                continue;
+            struct rr_component_petal *petal =
+                rr_simulation_get_petal(simulation, entity);
+            if (petal->id == rr_petal_id_ruby)
+                return entity;
+        }
+    }
+    return RR_NULL_ENTITY;
+}
+
+static void rr_health_ruby_cleanup_spawned(struct rr_simulation *simulation,
+                                           struct rr_component_petal *petal)
+{
+    for (uint8_t i = 0; i < RR_RUBY_SPAWN_MAX_MOBS; ++i)
+    {
+        EntityHash hash = petal->ruby_spawned_mobs[i];
+        if (hash == RR_NULL_ENTITY)
+            continue;
+        if (!rr_simulation_entity_alive(simulation, hash))
+        {
+            petal->ruby_spawned_mobs[i] = RR_NULL_ENTITY;
+            petal->ruby_spawned_lifespan[i] = 0;
+            if (petal->ruby_spawned_count > 0)
+                --petal->ruby_spawned_count;
+            continue;
+        }
+        if (petal->ruby_spawned_lifespan[i] > 0 &&
+            --petal->ruby_spawned_lifespan[i] == 0)
+        {
+            rr_simulation_request_entity_deletion(simulation, (EntityIdx)hash);
+            petal->ruby_spawned_mobs[i] = RR_NULL_ENTITY;
+            if (petal->ruby_spawned_count > 0)
+                --petal->ruby_spawned_count;
+        }
+    }
+}
+
+static void rr_health_spawn_ruby_mob(struct rr_simulation *simulation,
+                                     struct rr_component_player_info *player_info,
+                                     EntityIdx target)
+{
+    EntityIdx ruby_petal = rr_health_get_player_ruby_petal(simulation, player_info);
+    if (ruby_petal == RR_NULL_ENTITY)
+        return;
+
+    struct rr_component_petal *petal =
+        rr_simulation_get_petal(simulation, ruby_petal);
+    rr_health_ruby_cleanup_spawned(simulation, petal);
+    if (petal->ruby_spawned_count >= RR_RUBY_SPAWN_MAX_MOBS)
+        return;
+
+    struct rr_component_mob *target_mob = rr_simulation_get_mob(simulation, target);
+    if (target_mob == NULL)
+        return;
+
+    uint8_t spawn_rarity = target_mob->rarity > 0 ? target_mob->rarity - 1 : 0;
+
+    struct rr_component_physical *target_physical =
+        rr_simulation_get_physical(simulation, target);
+    struct rr_component_relations *owner_relations =
+        rr_simulation_get_relations(simulation, player_info->flower_id);
+    EntityIdx mob_id = rr_simulation_alloc_mob(
+        simulation, target_physical->arena, target_physical->x,
+        target_physical->y, target_mob->id, spawn_rarity,
+        owner_relations->team);
+    struct rr_component_relations *mob_relations =
+        rr_simulation_get_relations(simulation, mob_id);
+    rr_component_relations_set_owner(mob_relations, player_info->flower_id);
+    rr_component_relations_update_root_owner(simulation, mob_relations);
+    /* spawned by ruby: do not mark as player_spawned so they despawn
+       according to ticks_to_despawn. */
+    rr_simulation_get_mob(simulation, mob_id)->ticks_to_despawn =
+        RR_RUBY_SPAWN_LIFETIME;
+
+    for (uint8_t i = 0; i < RR_RUBY_SPAWN_MAX_MOBS; ++i)
+    {
+        if (petal->ruby_spawned_mobs[i] == RR_NULL_ENTITY)
+        {
+            petal->ruby_spawned_mobs[i] = rr_simulation_get_entity_hash(simulation, mob_id);
+            petal->ruby_spawned_lifespan[i] = RR_RUBY_SPAWN_LIFETIME;
+            ++petal->ruby_spawned_count;
+            break;
+        }
+    }
+}
 
 void rr_component_health_write(struct rr_component_health *this,
                                struct proto_bug *encoder, int is_creation,
@@ -128,11 +242,109 @@ void rr_component_health_do_damage(struct rr_simulation *simulation,
             rr_simulation_get_relations(simulation, this->parent_id)->team,
             rr_simulation_get_relations(simulation, from)->team))
         return;
+    if (rr_simulation_has_petal(simulation, from))
+    {
+        struct rr_component_petal *petal =
+            rr_simulation_get_petal(simulation, from);
+        if (petal->id == rr_petal_id_beak)
+        {
+            struct rr_component_physical *physical =
+                rr_simulation_get_physical(simulation, this->parent_id);
+            float duration = 25.0f *
+                             (petal->rarity == rr_rarity_id_common
+                                  ? 1.0f
+                                  : petal->rarity == rr_rarity_id_unusual
+                                        ? 1.2f
+                                        : petal->rarity == rr_rarity_id_rare
+                                              ? 1.38f
+                                              : petal->rarity == rr_rarity_id_epic
+                                                    ? 1.62f
+                                                    : petal->rarity == rr_rarity_id_legendary
+                                                          ? 1.91f
+                                                          : petal->rarity == rr_rarity_id_mythic
+                                                                ? 2.24f
+                                                                : petal->rarity == rr_rarity_id_exotic
+                                                                      ? 2.63f
+                                                                      : petal->rarity == rr_rarity_id_ultimate
+                                                                            ? 3.09f
+                                                                            : petal->rarity == rr_rarity_id_quantum
+                                                                                  ? 3.63f
+                                                                                  : petal->rarity == rr_rarity_id_aurous
+                                                                                        ? 4.27f
+                                                                                        : petal->rarity == rr_rarity_id_eternal
+                                                                                              ? 5.01f
+                                                                                              : petal->rarity == rr_rarity_id_hyper
+                                                                                                    ? 5.89f
+                                                                                                    : petal->rarity == rr_rarity_id_sunshine
+                                                                                                          ? 6.93f
+                                                                                                          : petal->rarity == rr_rarity_id_nebula
+                                                                                                                ? 8.13f
+                                                                                                                : petal->rarity == rr_rarity_id_infinity
+                                                                                                                      ? 9.56f
+                                                                                                                      : petal->rarity == rr_rarity_id_calamity
+                                                                                                                            ? 11.23f
+                                                                                                                            : petal->rarity == rr_rarity_id_unique
+                                                                                                                                  ? 13.2f
+                                                                                                                                  : petal->rarity == rr_rarity_id_cosmic
+                                                                                                                                        ? 15.51f
+                                                                                                                                        : petal->rarity == rr_rarity_id_galactic
+                                                                                                                                              ? 18.23f
+                                                                                                                                              : 20.0f);
+            physical->stun_ticks = (uint32_t)fmaxf((float)physical->stun_ticks,
+                                                   duration);
+        }
+        else if (petal->id == rr_petal_id_sapphire)
+        {
+            struct rr_component_physical *physical =
+                rr_simulation_get_physical(simulation, this->parent_id);
+            physical->stun_ticks = ~0u;
+        }
+    }
     struct rr_component_player_info *player_info =
         rr_simulation_get_player_info(simulation, p_info_id);
     this->squad_damage_counter[player_info->squad] += damage;
     struct rr_component_physical *physical =
         rr_simulation_get_physical(simulation, this->parent_id);
+    if (v == 0 && rr_simulation_has_mob(simulation, this->parent_id))
+    {
+        if (rr_simulation_has_petal(simulation, from) &&
+            rr_simulation_get_petal(simulation, from)->id == rr_petal_id_emerald)
+        {
+            struct rr_component_petal *petal =
+                rr_simulation_get_petal(simulation, from);
+            struct rr_component_health *petal_health =
+                rr_simulation_get_health(simulation, from);
+            struct rr_component_mob *mob =
+                rr_simulation_get_mob(simulation, this->parent_id);
+            float bonus_percent = 1.0f + 0.25f * mob->rarity;
+            petal->emerald_bonus_percent += bonus_percent;
+            if (petal->emerald_bonus_percent > 400.0f)
+                petal->emerald_bonus_percent = 400.0f;
+            if (petal->p_petal != NULL)
+                petal->p_petal->emerald_bonus_percent =
+                    petal->emerald_bonus_percent;
+            if (petal->slot != NULL && player_info != NULL)
+            {
+                petal->slot->client_emerald_bonus = petal->emerald_bonus_percent;
+                // Find slot position and mark protocol state
+                for (uint8_t i = 0; i < player_info->slot_count; ++i)
+                {
+                    if (&player_info->slots[i] == petal->slot)
+                    {
+                        player_info->protocol_state |= 1; // state_flags_petals
+                        break;
+                    }
+                }
+            }
+
+            float base_damage = RR_PETAL_DATA[petal->id].damage *
+                                RR_PETAL_DATA[petal->id].scale[petal->rarity].damage /
+                                RR_PETAL_DATA[petal->id].count[petal->rarity];
+            float multiplier = 1.0f + petal->emerald_bonus_percent / 100.0f;
+            petal_health->damage = base_damage * multiplier;
+        }
+        rr_health_spawn_ruby_mob(simulation, player_info, this->parent_id);
+    }
     struct rr_simulation_animation *animation =
         &simulation->animations[simulation->animation_length++];
     animation->type = rr_animation_type_damagenumber;

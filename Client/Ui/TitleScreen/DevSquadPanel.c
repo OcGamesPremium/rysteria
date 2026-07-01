@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -181,7 +180,7 @@ static void summon_mob_button_on_event(struct rr_ui_element *this,
     {
         if (game->input_data->mouse_buttons_up_this_tick & 1)
         {
-            uint8_t max_id = rr_mob_id_king_mackarel + 1;
+            uint8_t max_id = rr_mob_id_square + 1;
             uint8_t id = game->dev_cheats.summon_mob_id * max_id;
             if (id == max_id)
                 id = rand() % max_id;
@@ -253,7 +252,7 @@ static void kill_mobs_button_animate(struct rr_ui_element *this,
 static void summon_mob_id_slider_animate(struct rr_ui_element *this,
                                          struct rr_game *game)
 {
-    uint8_t max_id = rr_mob_id_king_mackarel + 1;
+    uint8_t max_id = rr_mob_id_square + 1;
     uint8_t id = game->dev_cheats.summon_mob_id * max_id;
     static char name[32];
     strcpy(name, id == max_id ? "Random" : RR_MOB_NAMES[id]);
@@ -306,7 +305,7 @@ static struct rr_ui_element *summon_mob_rarity_slider_init(struct rr_game *game)
                 NULL),
             rr_ui_text_init(game->dev_cheats.summon_mob_rarity_text, 16, 0xffffffff),
             NULL);
-    game->dev_cheats.summon_mob_rarity = (float)rr_rarity_id_galactic / rr_rarity_id_max;
+    game->dev_cheats.summon_mob_rarity = (float)(rr_rarity_id_max - 1) / rr_rarity_id_max;
     element->animate = summon_mob_rarity_slider_animate;
     return element;
 }
@@ -385,6 +384,17 @@ static struct rr_ui_element *no_grid_influence_toggle_init(struct rr_game *game)
     return element;
 }
 
+static struct rr_ui_element *no_drop_toggle_init(struct rr_game *game)
+{
+    struct rr_ui_element *element =
+        rr_ui_h_container_init(
+            rr_ui_container_init(), 0, 10,
+            rr_ui_toggle_box_init(&game->dev_cheats.no_drop),
+            rr_ui_text_init("No drop", 16, 0xffffffff), NULL);
+    game->dev_cheats.no_drop = 1;
+    return element;
+}
+
 static struct rr_ui_element *speed_slider_init(struct rr_game *game)
 {
     struct rr_ui_element *element =
@@ -443,6 +453,7 @@ struct rr_ui_element *rr_ui_dev_panel_container_init(struct rr_game *game)
         rr_ui_set_justify(no_wall_collision_toggle_init(game), -1, -1),
         rr_ui_set_justify(no_collision_toggle_init(game), -1, -1),
         rr_ui_set_justify(no_grid_influence_toggle_init(game), -1, -1),
+        rr_ui_set_justify(no_drop_toggle_init(game), -1, -1),
         rr_ui_set_justify(speed_slider_init(game), 1, 1),
         rr_ui_set_justify(fov_slider_init(game), 1, 1),
         NULL);

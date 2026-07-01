@@ -118,7 +118,7 @@ struct rr_petal_base_stat_scale const mixed[rr_rarity_id_max] = {
     {432.0*75000000000,      432.0*75000000000     }, // rr_rarity_id_galactic
     {432.0*7500000000000,    432.0*7500000000000   }, // rr_rarity_id_ethereal,
     {432.0*750000000000000,  432.0*750000000000000 }, // rr_rarity_id_prime
-}
+};
 
 struct rr_petal_base_stat_scale const unique_petal[rr_rarity_id_max] = {
 //   hp                         dmg
@@ -168,7 +168,7 @@ struct rr_petal_data RR_PETAL_DATA[rr_petal_id_max] = {
     {rr_petal_id_club,            rr_rarity_id_common,    defensive,    8.0f,    600.0f,   0.0f,   250,    0,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      1,    1,       1,     1,       1,       1,     2,     3,       3,       1,    6 }},
     {rr_petal_id_crest,           rr_rarity_id_rare,      offensive,    0.0f,      0.0f,   0.0f,     0,    0,       {     0,      0,   0,   0,        0,     0,     0,       0,      0,     0,      0,    0,       0,     0,       0,       0,     0,     0,       0,       0,    0 }},
     {rr_petal_id_droplet,         rr_rarity_id_common,    offensive,   15.0f,      5.0f,   0.0f,    37,    0,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      1,    1,       1,     1,       1,       1,     1,     1,       1,       1,    1 }},
-    {rr_petal_id_beak,            rr_rarity_id_unusual,   defensive,    0.0f,     10.0f,   0.0f,    55,    0,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      1,    1,       1,     3,       3,       3,     3,     3,       5,       1,    6 }},
+    {rr_petal_id_beak,            rr_rarity_id_unusual,   defensive,    0.1f,     10.0f,   0.0f,    55,    0,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      1,    1,       1,     1,       1,       2,     2,     2,       4,       4,    6 }},
     {rr_petal_id_lightning,       rr_rarity_id_unusual,   offensive,  13.65f,      1.0f,   0.0f,    63,    0,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      2,    2,       2,     3,       3,       3,     3,     5,       6,       3,    6 }},
     {rr_petal_id_third_eye,       rr_rarity_id_legendary, offensive,    6.5f,     17.5f,   0.0f,    25,    0,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      1,    1,       1,     1,       1,       1,     1,     1,       1,       1,    1 }},
     {rr_petal_id_nest,            rr_rarity_id_legendary, defensive,    5.0f,     25.0f,   0.0f,   125,    1,       {     1,      1,   1,   1,        1,     1,     1,       1,      1,     1,      1,    1,       1,     1,       1,       1,     1,     1,       1,       1,    1 }},
@@ -250,9 +250,9 @@ char const *RR_PETAL_DESCRIPTIONS[rr_petal_id_max] = {
     "Home sweet home",
     "Nice ball bro",
     "Meat meta",
-    "Pop and you're gone | Bubble limit: 5 petals",
+    "Pop and you're gone | Bubble limit: 2 petals",
     "Spawns a pet meteor to protect you",
-    "Does more damage if target hp is below 50%",
+    "Does 10x damage if target hp is below 50%",
     "Made by the bees",
     "Very fine",
     "Remember to feed your pets",

@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -81,9 +80,8 @@ uint8_t trice_dako_zone()
 }
 uint8_t trex_anky_zone()
 {
-    return rr_frand() > 0.4 ? DIFFICULT_MOBS
-                            : rr_frand() > 0.5 ? rr_mob_id_ankylosaurus
-                                               : rr_mob_id_trex;
+    return rr_frand() > 0.4 ? DIFFICULT_MOBS :
+           rr_frand() > 0.5 ? rr_mob_id_ankylosaurus : rr_mob_id_trex;
 }
 uint8_t edmo_zone() { return rr_mob_id_edmontosaurus; }
 // ~x6 tree chance
@@ -119,6 +117,10 @@ uint8_t pter_edmo_zone()
                             : rr_frand() > 0.5 ? rr_mob_id_edmontosaurus
                                                : rr_mob_id_pteranodon;
 }
+uint8_t square_zone()
+{
+    return rr_frand() > 0.001 ? ALL_MOBS : rr_mob_id_square;
+}
 
 struct zone
 {
@@ -137,6 +139,7 @@ static struct zone zone_positions[ZONE_POSITION_COUNT] = {
     {12, 10, 3,  2, fern_tree_zone},
     {28, 1,  6,  3, quetz_zone},
     {36, 6,  4,  2, edmo_zone},
+    {1,  1,  3,  2, square_zone},
     /*
     {19, 33, 5,  2, tree_zone},
     {16, 35, 11, 4, tree_zone},
@@ -236,7 +239,9 @@ static void spawn_mob(struct rr_simulation *this, uint32_t grid_x,
                     id != rr_mob_id_fern &&
                     id != rr_mob_id_tree &&
                     id != rr_mob_id_meteor &&
-                    id != rr_mob_id_tower)
+                    id != rr_mob_id_shiny_meteor &&
+                    id != rr_mob_id_tower &&
+                    id != rr_mob_id_square)
                     break;
             }
     }

@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -109,6 +108,15 @@ void rr_component_player_info_set_slot_hp(struct rr_component_player_info *this,
     this->slots[pos].client_health = hp;
 }
 
+RR_SERVER_ONLY(void rr_component_player_info_set_emerald_bonus(
+    struct rr_component_player_info *this, uint8_t pos,
+    uint16_t bonus))
+RR_SERVER_ONLY({
+    this->protocol_state |=
+        (this->slots[pos].client_emerald_bonus != bonus) * state_flags_petals;
+    this->slots[pos].client_emerald_bonus = bonus;
+})
+
 void rr_component_player_info_set_update_loot(
     struct rr_component_player_info *this)
 {
@@ -144,7 +152,12 @@ void rr_component_player_info_petal_swap(struct rr_component_player_info *this,
 
     slot->count = RR_PETAL_DATA[slot->id].count[slot->rarity];
     for (uint32_t i = 0; i < slot->count; ++i)
-        slot->petals[i].cooldown_ticks = RR_PETAL_DATA[slot->id].cooldown + 25;
+    {
+        slot->petals[i].cooldown_ticks = RR_PETAL_DATA[slot->id].cooldown;
+        slot->petals[i].secondary_cooldown_ticks = RR_PETAL_DATA[slot->id].secondary_cooldown;
+        RR_SERVER_ONLY(slot->petals[i].emerald_bonus_percent = 0.0f;)
+    }
+    slot->client_emerald_bonus = 0;
     this->protocol_state |= state_flags_petals;
 }
 
@@ -169,6 +182,8 @@ void rr_component_player_info_write(struct rr_component_player_info *this,
                                   "p_ccd");
             proto_bug_write_uint8(encoder, this->slots[i].client_health,
                                   "p_chp");
+            proto_bug_write_uint16(encoder, (uint16_t)rr_fclamp(this->slots[i].client_emerald_bonus, 0, 65535),
+                                   "p_ebons");
 
             proto_bug_write_uint8(encoder, this->secondary_slots[i].id, "p_id");
             proto_bug_write_uint8(encoder, this->secondary_slots[i].rarity,
@@ -225,6 +240,8 @@ void rr_component_player_info_read(struct rr_component_player_info *this,
                 proto_bug_read_uint8(encoder, "p_ccd");
             this->slots[i].client_health =
                 proto_bug_read_uint8(encoder, "p_chp");
+            this->slots[i].client_emerald_bonus =
+                proto_bug_read_uint16(encoder, "p_ebons");
 
             this->secondary_slots[i].id = proto_bug_read_uint8(encoder, "p_id");
             this->secondary_slots[i].rarity =

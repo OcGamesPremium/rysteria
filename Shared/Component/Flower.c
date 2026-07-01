@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -146,8 +145,11 @@ void rr_component_flower_set_dead(struct rr_component_flower *this,
         for (uint8_t outer = 0; outer < player_info->slot_count; ++outer)
             for (uint8_t inner = 0; inner < player_info->slots[outer].count;
                  ++inner)
-                player_info->slots[outer].petals[inner].cooldown_ticks =
-                    RR_PETAL_DATA[player_info->slots[outer].id].cooldown;
+                player_info->slots[outer].petals[inner].cooldown_ticks = RR_PETAL_DATA[player_info->slots[outer].id].cooldown;
+        for (uint8_t outer = 0; outer < player_info->slot_count; ++outer)
+            for (uint8_t inner = 0; inner < player_info->slots[outer].count;
+                 ++inner)
+                player_info->slots[outer].petals[inner].secondary_cooldown_ticks = RR_PETAL_DATA[player_info->slots[outer].id].secondary_cooldown;
         rr_component_physical_set_angle(physical, this->saved_angle);
         health->damage_paused = 63;
         health->health = 1;

@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -31,11 +30,121 @@
 #include <Shared/Utilities.h>
 #include <Shared/Vector.h>
 
+#define RR_RUBY_SPAWN_LIFETIME (10 * 25)
+#define RR_RUBY_SPAWN_MAX_MOBS 10
+
+static void ruby_petal_system_tick(struct rr_simulation *simulation,
+                                  struct rr_component_petal *petal);
+
 struct area_captures
 {
     struct rr_simulation *simulation;
     EntityIdx petal_id;
 };
+
+#define RR_LIVING_FIRE_TRAIL_DURATION 38
+#define RR_LIVING_FIRE_TRAIL_TICK_INTERVAL 6
+#define RR_LIVING_FIRE_TRAIL_MAX_NODES 8
+
+struct living_fire_trail_captures
+{
+    struct rr_simulation *simulation;
+    EntityIdx owner_id;
+    float damage;
+};
+
+static void living_fire_trail_damage(EntityIdx target, void *_captures)
+{
+    struct living_fire_trail_captures *captures = _captures;
+    struct rr_simulation *simulation = captures->simulation;
+    if (!rr_simulation_has_mob(simulation, target))
+        return;
+    if (!rr_simulation_has_health(simulation, target))
+        return;
+    struct rr_component_health *target_health =
+        rr_simulation_get_health(simulation, target);
+    rr_component_health_do_damage(simulation, target_health,
+                                  captures->owner_id, captures->damage,
+                                  rr_animation_color_type_fireball);
+}
+
+static void living_fire_petal_system(struct rr_simulation *simulation,
+                                    EntityIdx petal_id,
+                                    struct rr_component_petal *petal)
+{
+    struct rr_component_physical *physical =
+        rr_simulation_get_physical(simulation, petal_id);
+    struct rr_component_arena *arena =
+        rr_simulation_get_arena(simulation, physical->arena);
+    float radius = 100.0f + 10.0f * petal->rarity;
+    float damage = 10.0f + RR_PETAL_RARITY_SCALE[petal->rarity].fire_damage;
+
+    if (++petal->living_fire_trail_ticks >=
+        RR_LIVING_FIRE_TRAIL_TICK_INTERVAL)
+    {
+        petal->living_fire_trail_ticks -=
+            RR_LIVING_FIRE_TRAIL_TICK_INTERVAL;
+
+        uint8_t slot = RR_LIVING_FIRE_TRAIL_MAX_NODES;
+        for (uint8_t i = 0; i < RR_LIVING_FIRE_TRAIL_MAX_NODES; ++i)
+        {
+            if (petal->living_fire_trail_age[i] == 0)
+            {
+                slot = i;
+                break;
+            }
+        }
+        if (slot == RR_LIVING_FIRE_TRAIL_MAX_NODES)
+        {
+            uint8_t oldest = 0;
+            for (uint8_t i = 1; i < RR_LIVING_FIRE_TRAIL_MAX_NODES; ++i)
+            {
+                if (petal->living_fire_trail_age[i] <
+                    petal->living_fire_trail_age[oldest])
+                {
+                    oldest = i;
+                }
+            }
+            slot = oldest;
+        }
+
+        petal->living_fire_trail_positions[slot].x = physical->x;
+        petal->living_fire_trail_positions[slot].y = physical->y;
+        if (petal->living_fire_trail_age[slot] == 0)
+            ++petal->living_fire_trail_count;
+        petal->living_fire_trail_age[slot] = RR_LIVING_FIRE_TRAIL_DURATION;
+
+        struct living_fire_trail_captures captures = {
+            simulation, petal->parent_id, damage};
+
+        for (uint8_t i = 0; i < RR_LIVING_FIRE_TRAIL_MAX_NODES; ++i)
+        {
+            if (petal->living_fire_trail_age[i] == 0)
+                continue;
+
+            struct rr_vector *pos = &petal->living_fire_trail_positions[i];
+            struct rr_simulation_animation *animation =
+                &simulation->animations[simulation->animation_length++];
+            animation->type = rr_animation_type_area_damage;
+            animation->owner = petal->parent_id;
+            animation->x = pos->x;
+            animation->y = pos->y;
+            animation->size = radius;
+            animation->color_type = rr_animation_color_type_fireball;
+            rr_spatial_hash_query(&arena->spatial_hash, pos->x, pos->y,
+                                  radius, radius, &captures,
+                                  living_fire_trail_damage);
+        }
+    }
+
+    for (uint8_t i = 0; i < RR_LIVING_FIRE_TRAIL_MAX_NODES; ++i)
+    {
+        if (petal->living_fire_trail_age[i] == 0)
+            continue;
+        if (--petal->living_fire_trail_age[i] == 0)
+            --petal->living_fire_trail_count;
+    }
+}
 
 static void uranium_damage(EntityIdx target, void *_captures)
 {
@@ -83,7 +192,9 @@ static void uranium_damage(EntityIdx target, void *_captures)
         mob->id != rr_mob_id_fern &&
         mob->id != rr_mob_id_tree &&
         mob->id != rr_mob_id_meteor &&
-        mob->id != rr_mob_id_tower )
+        mob->id != rr_mob_id_tower &&
+        mob->id != rr_mob_id_shiny_meteor &&
+        mob->id != rr_mob_id_square)
     {
         ai->ai_type = rr_ai_type_aggro;
         if (ai->aggro_range < radius + target_physical->radius)
@@ -186,6 +297,7 @@ static void system_petal_detach(struct rr_simulation *simulation,
         &player_info->slots[outer_pos].petals[inner_pos];
     ppetal->entity_hash = RR_NULL_ENTITY;
     ppetal->cooldown_ticks = petal_data->cooldown;
+    ppetal->secondary_cooldown_ticks = petal_data->secondary_cooldown;
 }
 
 static uint8_t is_close_enough_to_parent(struct rr_simulation *simulation,
@@ -227,6 +339,22 @@ static uint8_t is_close_enough_and_angle(struct rr_simulation *simulation,
                               physical->y - seeker_physical->y};
     return rr_angle_within(rr_vector_theta(&delta),
                            seeker_physical->bearing_angle, 1);
+}
+
+static uint32_t count_equipped_bubble_petals(
+    struct rr_component_player_info *player_info)
+{
+    uint32_t bubble_count = 0;
+    for (uint64_t i = 0; i < player_info->slot_count; ++i)
+    {
+        struct rr_component_player_info_petal_slot *slot =
+            &player_info->slots[i];
+        if (slot->id == rr_petal_id_bubble)
+        {
+            bubble_count += slot->count;
+        }
+    }
+    return bubble_count;
 }
 
 static void system_flower_petal_movement_logic(
@@ -537,7 +665,12 @@ static void system_flower_petal_movement_logic(
                     break;
                 if (flower_physical->bubbling)
                     flower_physical->bubbling_to_death = 0;
-                flower_physical->bubbling = 1;
+                // Проверка: не давать неуязвимость если надето 6 или больше bubble
+                uint32_t bubble_count = count_equipped_bubble_petals(player_info);
+                if (bubble_count < 3)
+                {
+                    flower_physical->bubbling = 1;
+                }
                 if (flower_physical->bubbling_to_death)
                 {
                     rr_vector_set_magnitude(&accel, RR_PLAYER_SPEED * 100);
@@ -549,14 +682,24 @@ static void system_flower_petal_movement_logic(
             }
             break;
         }
+        case rr_petal_id_ruby:
+        {
+            break;
+        }
         default:
             break;
-        //case rr_petal_id_ruby
         }
             
     }
     else if (!petal->detached)
-        --petal->effect_delay;
+    {
+        if (petal_data->secondary_cooldown > 0)
+            petal->effect_delay -= player_info->modifiers.secondary_reload_speed;
+        else
+            --petal->effect_delay;
+        if (petal->effect_delay < 0)
+            petal->effect_delay = 0;
+    }
     else
         return;
 
@@ -631,6 +774,7 @@ static void petal_modifiers(struct rr_simulation *simulation,
     player_info->modifiers.magnet_count = 0;
     player_info->modifiers.petal_extension = 0;
     player_info->modifiers.reload_speed = 1;
+    player_info->modifiers.secondary_reload_speed = 1;
 
     physical->aggro_range_multiplier = 1;
     health->damage_reduction = 0;
@@ -677,30 +821,86 @@ static void petal_modifiers(struct rr_simulation *simulation,
         {
             player_info->modifiers.reload_speed += 0.02 * (slot->rarity + 1);
         }
-        else if (data->id == rr_petal_id_emerald_leaf)
+        else if (data->id == rr_petal_id_emerald_amulet)
         {
-            player_info->modifiers.reload_speed += 0.03 * (slot->rarity + 1);
+            player_info->modifiers.secondary_reload_speed += 0.03 * (slot->rarity + 1);
+        }
+        else if (data->id == rr_petal_id_dev_leaf)
+        {
+            player_info->modifiers.reload_speed += 4.0 * (slot->rarity + 1);
         }
         else if (data->id == rr_petal_id_feather)
         {
-            physical->acceleration_scale +=
-                (0.05 + 0.025 * slot->rarity) * feather_diminish_factor;
+            float argument_1 = 0;
+            if(slot->rarity == rr_rarity_id_common) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_unusual) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_rare) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_epic) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_legendary) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_mythic) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_exotic) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_ultimate) argument_1 = 0.025;
+            else if(slot->rarity == rr_rarity_id_quantum) argument_1 = 0.075;
+            else if(slot->rarity == rr_rarity_id_aurous) argument_1 = 0.075;
+            else if(slot->rarity == rr_rarity_id_eternal) argument_1 = 0.075;
+            else if(slot->rarity == rr_rarity_id_hyper) argument_1 = 0.075;
+            else if(slot->rarity == rr_rarity_id_sunshine) argument_1 = 0.075;
+            else if(slot->rarity == rr_rarity_id_nebula) argument_1 = 0.1;
+            else if(slot->rarity == rr_rarity_id_infinity) argument_1 = 0.1;
+            else if(slot->rarity == rr_rarity_id_calamity) argument_1 = 0.1;
+            else if(slot->rarity == rr_rarity_id_unique) argument_1 = 0.1;
+            else if(slot->rarity == rr_rarity_id_cosmic) argument_1 = 0.15;
+            else if(slot->rarity == rr_rarity_id_galactic) argument_1 = 0.15;
+            else if(slot->rarity == rr_rarity_id_ethereal) argument_1 = 0.15;
+            else if(slot->rarity == rr_rarity_id_prime) argument_1 = 0.15;
+            physical->acceleration_scale += (0.05 + argument_1 * slot->rarity) * feather_diminish_factor;
             feather_diminish_factor *= 0.5;
         }
         else if (data->id == rr_petal_id_crest)
         {
             ++crest_count;
             RR_SET_IF_LESS(player_info->camera_fov, 1 - 0.075 * slot->rarity)
+            
+            if(slot->rarity == rr_rarity_id_nebula)   player_info->camera_fov = 0.09;
+            if(slot->rarity == rr_rarity_id_infinity) player_info->camera_fov = 0.08;
+            if(slot->rarity == rr_rarity_id_calamity) player_info->camera_fov = 0.07;
+            if(slot->rarity == rr_rarity_id_unique)   player_info->camera_fov = 0.06;
+            if(slot->rarity == rr_rarity_id_cosmic)   player_info->camera_fov = 0.05;
+            if(slot->rarity == rr_rarity_id_galactic) player_info->camera_fov = 0.04;
+            if(slot->rarity == rr_rarity_id_ethereal) player_info->camera_fov = 0.03;
+            if(slot->rarity == rr_rarity_id_prime)    player_info->camera_fov = 0.02;
         }
         else if (data->id == rr_petal_id_droplet)
             ++rot_count;
         else if (data->id == rr_petal_id_third_eye)
         {
+            /*
             ++third_eye_count;
-            player_info->modifiers.petal_extension +=
-                45 * (slot->rarity - rr_rarity_id_epic) *
-                    third_eye_diminish_factor;
+            player_info->modifiers.petal_extension += 45 * (slot->rarity - rr_rarity_id_epic) * third_eye_diminish_factor;
             third_eye_diminish_factor *= 0.5;
+            */
+            ++third_eye_count;
+            if(slot->rarity == rr_rarity_id_common)    player_info->modifiers.petal_extension = 15;
+            if(slot->rarity == rr_rarity_id_unusual)   player_info->modifiers.petal_extension = 30;
+            if(slot->rarity == rr_rarity_id_rare)      player_info->modifiers.petal_extension = 45;
+            if(slot->rarity == rr_rarity_id_epic)      player_info->modifiers.petal_extension = 60;
+            if(slot->rarity == rr_rarity_id_legendary) player_info->modifiers.petal_extension = 75;
+            if(slot->rarity == rr_rarity_id_mythic)    player_info->modifiers.petal_extension = 90;
+            if(slot->rarity == rr_rarity_id_exotic)    player_info->modifiers.petal_extension = 100;
+            if(slot->rarity == rr_rarity_id_ultimate)  player_info->modifiers.petal_extension = 110;
+            if(slot->rarity == rr_rarity_id_quantum)   player_info->modifiers.petal_extension = 120;
+            if(slot->rarity == rr_rarity_id_aurous)    player_info->modifiers.petal_extension = 130;
+            if(slot->rarity == rr_rarity_id_eternal)   player_info->modifiers.petal_extension = 140;
+            if(slot->rarity == rr_rarity_id_hyper)     player_info->modifiers.petal_extension = 150;
+            if(slot->rarity == rr_rarity_id_sunshine)  player_info->modifiers.petal_extension = 160;
+            if(slot->rarity == rr_rarity_id_nebula)    player_info->modifiers.petal_extension = 170;
+            if(slot->rarity == rr_rarity_id_infinity)  player_info->modifiers.petal_extension = 180;
+            if(slot->rarity == rr_rarity_id_calamity)  player_info->modifiers.petal_extension = 190;
+            if(slot->rarity == rr_rarity_id_unique)    player_info->modifiers.petal_extension = 200;
+            if(slot->rarity == rr_rarity_id_cosmic)    player_info->modifiers.petal_extension = 250;
+            if(slot->rarity == rr_rarity_id_galactic)  player_info->modifiers.petal_extension = 300;
+            if(slot->rarity == rr_rarity_id_ethereal)  player_info->modifiers.petal_extension = 350;
+            if(slot->rarity == rr_rarity_id_prime)     player_info->modifiers.petal_extension = 400;
         }
         else if (data->id == rr_petal_id_bone)
         {
@@ -757,6 +957,21 @@ system_egg_hatching_logic(struct rr_simulation *simulation,
     else if (petal->id == rr_petal_id_meteor)
     {
         m_id = rr_mob_id_meteor;
+        m_rar = petal->rarity >= 1 ? petal->rarity - 1 : 0;
+    }
+    else if (petal->id == rr_petal_id_shiny_meteor)
+    {
+        m_id = rr_mob_id_shiny_meteor;
+        m_rar = petal->rarity >= 1 ? petal->rarity : 0;
+    }
+    else if (petal->id == rr_petal_id_square)
+    {
+        m_id = rr_mob_id_square;
+        m_rar = petal->rarity >= 1 ? petal->rarity : 0;
+    }
+    else if (petal->id == rr_petal_id_stick)
+    {
+        m_id = rr_mob_id_pteranodon;
         m_rar = petal->rarity >= 1 ? petal->rarity - 1 : 0;
     }
     struct rr_component_physical *physical =
@@ -885,6 +1100,11 @@ static void rr_system_petal_reload_foreach_function(EntityIdx id,
     struct rr_component_physical *flower_physical =
         rr_simulation_get_physical(simulation, player_info->flower_id);
     petal_modifiers(simulation, player_info);
+
+    uint8_t same_rarity_count[rr_rarity_id_max] = {0};
+    for (uint64_t outer = 0; outer < player_info->slot_count; ++outer)
+        same_rarity_count[player_info->slots[outer].rarity] += 1;
+
     uint32_t rotation_pos = 0;
     uint8_t has_bubble = 0;
     for (uint64_t outer = 0; outer < player_info->slot_count; ++outer)
@@ -893,6 +1113,7 @@ static void rr_system_petal_reload_foreach_function(EntityIdx id,
             &player_info->slots[outer];
         struct rr_petal_data const *data = &RR_PETAL_DATA[slot->id];
         uint8_t max_cd = 0;
+        uint8_t max_scd = 0;
         uint8_t min_hp = 255;
         slot->count = slot->id == rr_petal_id_peas
                           ? 1
@@ -909,20 +1130,29 @@ static void rr_system_petal_reload_foreach_function(EntityIdx id,
             {
                 p_petal->entity_hash = RR_NULL_ENTITY;
                 p_petal->cooldown_ticks = data->cooldown;
+                p_petal->secondary_cooldown_ticks = data->secondary_cooldown;
             }
             if (p_petal->entity_hash == RR_NULL_ENTITY)
             {
                 if (slot->id == rr_petal_id_bubble && has_bubble)
                 {
                     p_petal->cooldown_ticks = data->cooldown;
+                    p_petal->secondary_cooldown_ticks = data->secondary_cooldown;
                     if (--clump_count == 0)
                         --rotation_pos;
                 }
                 float cd = rr_fclamp(
                     255.0f * p_petal->cooldown_ticks / data->cooldown, 0, 255);
+                float scd = 0;
+                if (data->secondary_cooldown > 0)
+                    scd = rr_fclamp(
+                        255.0f * p_petal->secondary_cooldown_ticks / data->secondary_cooldown, 0, 255);
                 if (cd > max_cd)
                     max_cd = cd;
+                if (scd > max_scd)
+                    max_scd = scd;
                 p_petal->cooldown_ticks -= player_info->modifiers.reload_speed;
+                p_petal->secondary_cooldown_ticks -= player_info->modifiers.secondary_reload_speed;
                 if (p_petal->cooldown_ticks <= 0)
                 {
                     p_petal->entity_hash = rr_simulation_get_entity_hash(
@@ -936,14 +1166,43 @@ static void rr_system_petal_reload_foreach_function(EntityIdx id,
                                                 p_petal->entity_hash);
                     petal->slot = slot;
                     petal->p_petal = p_petal;
-                    if (data->id == rr_petal_id_meteor)
-                        system_egg_hatching_logic(simulation, player_info,
-                                                  p_petal);
+                    if (data->id == rr_petal_id_opal)
+                    {
+                        uint32_t same_rarity = same_rarity_count[slot->rarity];
+                        if (same_rarity > 1)
+                        {
+                            struct rr_component_health *health =
+                                rr_simulation_get_health(simulation,
+                                                         p_petal->entity_hash);
+                            rr_component_health_set_max_health(
+                                health, health->max_health * same_rarity);
+                            rr_component_health_set_health(
+                                health, health->max_health);
+                            health->damage *= same_rarity;
+                        }
+                    }
+                    if (data->id == rr_petal_id_emerald)
+                    {
+                        petal->emerald_bonus_percent =
+                            p_petal->emerald_bonus_percent;
+                        struct rr_component_health *health =
+                            rr_simulation_get_health(simulation,
+                                                     p_petal->entity_hash);
+                        float base_damage = RR_PETAL_DATA[petal->id].damage *
+                                            RR_PETAL_DATA[petal->id].scale[petal->rarity].damage /
+                                            RR_PETAL_DATA[petal->id].count[petal->rarity];
+                        float multiplier = 1.0f +
+                                           petal->emerald_bonus_percent / 100.0f;
+                        health->damage = base_damage * multiplier;
+                    }
+                    if (data->id == rr_petal_id_meteor) system_egg_hatching_logic(simulation, player_info, p_petal);
+                    if (data->id == rr_petal_id_shiny_meteor) system_egg_hatching_logic(simulation, player_info, p_petal);
+                    if (data->id == rr_petal_id_square) system_egg_hatching_logic(simulation, player_info, p_petal);
                 }
-                if (data->id == rr_petal_id_meteor)
+                if (data->id == rr_petal_id_meteor || data->id == rr_petal_id_shiny_meteor || data->id == rr_petal_id_square)
                 {
                     if (--clump_count == 0)
-                        --rotation_pos;
+                    --rotation_pos;
                 }
             }
             else
@@ -1004,6 +1263,19 @@ static void rr_system_petal_reload_foreach_function(EntityIdx id,
                         --rotation_pos;
                     continue;
                 }
+                if (data->id == rr_petal_id_stick)
+                {
+                    system_nest_egg_choosing_logic(simulation, player_info,
+                                                   p_petal->entity_hash);
+                    if (rr_simulation_has_petal(simulation, p_petal->entity_hash))
+                    {
+                        if (rr_simulation_get_relations(simulation,
+                                p_petal->entity_hash)->nest != RR_NULL_ENTITY)
+                            system_nest_egg_movement_logic(simulation,
+                                                           p_petal->entity_hash);
+                        system_egg_hatching_logic(simulation, player_info, p_petal);
+                    }
+                }
                 system_flower_petal_movement_logic(
                     simulation, p_petal->entity_hash, player_info,
                     rotation_pos - 1, outer, inner, data);
@@ -1031,8 +1303,12 @@ static void system_petal_misc_logic(EntityIdx id, void *_simulation)
         rr_simulation_request_entity_deletion(simulation, id);
         return;
     }
+    if (petal->id == rr_petal_id_ruby)
+        ruby_petal_system_tick(simulation, petal);
     if (petal->detached == 0) // it's mob owned if this is true
     {
+        if (petal->id == rr_petal_id_living_fire)
+            living_fire_petal_system(simulation, id, petal);
         if (petal->id == rr_petal_id_uranium)
             uranium_petal_system(simulation, petal);
         if (!rr_simulation_has_mob(simulation, relations->owner))
@@ -1044,6 +1320,8 @@ static void system_petal_misc_logic(EntityIdx id, void *_simulation)
     }
     else
     {
+        if (petal->id == rr_petal_id_living_fire)
+            living_fire_petal_system(simulation, id, petal);
         if (petal->id == rr_petal_id_shell)
         {
             rr_component_physical_set_angle(
@@ -1115,7 +1393,28 @@ static void system_petal_misc_logic(EntityIdx id, void *_simulation)
                     rr_simulation_add_physical(simulation, nest_id);
                 rr_component_physical_set_x(nest_physical, physical->x);
                 rr_component_physical_set_y(nest_physical, physical->y);
-                rr_component_physical_set_radius(nest_physical, 250);
+                /*if(petal->rarity == rr_rarity_id_common)     */rr_component_physical_set_radius(nest_physical, 250);
+                /*if(petal->rarity == rr_rarity_id_unusual)    rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_rare)       rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_epic)       rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_legendary)  rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_exotic)     rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_mythic)     rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_exotic)     rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_ultimate)   rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_quantum)    rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_aurous)     rr_component_physical_set_radius(nest_physical, 250);
+                if(petal->rarity == rr_rarity_id_eternal)    rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_hyper)      rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_sunshine)   rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_nebula)     rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_infinity)   rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_calamity)   rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_unique)     rr_component_physical_set_radius(nest_physical, 400);
+                if(petal->rarity == rr_rarity_id_cosmic)     rr_component_physical_set_radius(nest_physical, 450);
+                if(petal->rarity == rr_rarity_id_galactic)   rr_component_physical_set_radius(nest_physical, 450);
+                if(petal->rarity == rr_rarity_id_ethereal)   rr_component_physical_set_radius(nest_physical, 550);
+                if(petal->rarity == rr_rarity_id_prime)      rr_component_physical_set_radius(nest_physical, 700);*/
                 rr_component_physical_set_angle(nest_physical, rr_frand() * 2 * M_PI);
                 nest_physical->friction = 0.75;
                 nest_physical->arena = physical->arena;
@@ -1127,7 +1426,7 @@ static void system_petal_misc_logic(EntityIdx id, void *_simulation)
                 struct rr_component_health *nest_health =
                     rr_simulation_add_health(simulation, nest_id);
                 uint8_t stats_rarity = nest->rarity > 0 ? nest->rarity - 1 : 0;
-                    nest_health, 150 * pow((RR_MOB_RARITY_SCALING[stats_rarity].health), 1.075));
+                rr_component_health_set_max_health(nest_health, 150 * pow((RR_MOB_RARITY_SCALING[stats_rarity].health), 1.075));
                 rr_component_health_set_health(nest_health, nest_health->max_health);
                 nest_health->damage = 0;
                 nest_health->damage_reduction =
@@ -1159,6 +1458,35 @@ static void system_nest_logic(EntityIdx id, void *_simulation)
                                   physical->y - flower_physical->y};
         if (rr_vector_magnitude_cmp(&delta, 5000) == 1)
             rr_simulation_request_entity_deletion(simulation, id);
+    }
+}
+
+static void ruby_petal_system_tick(struct rr_simulation *simulation,
+                                  struct rr_component_petal *petal)
+{
+    if (petal == NULL)
+        return;
+    for (uint8_t i = 0; i < RR_RUBY_SPAWN_MAX_MOBS; ++i)
+    {
+        EntityHash hash = petal->ruby_spawned_mobs[i];
+        if (hash == RR_NULL_ENTITY)
+            continue;
+        if (!rr_simulation_entity_alive(simulation, hash))
+        {
+            petal->ruby_spawned_mobs[i] = RR_NULL_ENTITY;
+            petal->ruby_spawned_lifespan[i] = 0;
+            if (petal->ruby_spawned_count > 0)
+                --petal->ruby_spawned_count;
+            continue;
+        }
+        if (petal->ruby_spawned_lifespan[i] > 0 &&
+            --petal->ruby_spawned_lifespan[i] == 0)
+        {
+            rr_simulation_request_entity_deletion(simulation, (EntityIdx)hash);
+            petal->ruby_spawned_mobs[i] = RR_NULL_ENTITY;
+            if (petal->ruby_spawned_count > 0)
+                --petal->ruby_spawned_count;
+        }
     }
 }
 

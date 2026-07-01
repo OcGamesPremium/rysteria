@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -46,6 +45,12 @@ void rr_tree_draw(struct rr_renderer *);
 void rr_meteor_draw(struct rr_renderer *);
 void rr_beehive_draw(struct rr_renderer *);
 void rr_tower_draw(struct rr_renderer *);
+void rr_shiny_meteor_draw(struct rr_renderer *);
+void rr_square_draw(struct rr_renderer *);
+
+void rr_lanternfly_abdomen_draw(struct rr_renderer *);
+void rr_lanternfly_leg_draw(struct rr_renderer *);
+void rr_lanternfly_wing1_draw(struct rr_renderer *);
 
 void rr_pachycephalosaurus_head_draw(struct rr_renderer *);
 void rr_pachycephalosaurus_body_draw(struct rr_renderer *);

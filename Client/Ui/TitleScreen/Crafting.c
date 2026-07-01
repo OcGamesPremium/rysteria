@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -78,7 +77,7 @@ static uint8_t can_craft(struct rr_game *game)
 
 static uint8_t can_autocraft(struct rr_game *game)
 {
-    for (uint8_t id = 1; id <= rr_petal_id_meteor; ++id)
+    for (uint8_t id = 1; id <= rr_petal_id_max - 1; ++id)
     {
         uint32_t sum = 0;
         for (uint8_t rarity = 0; rarity < rr_rarity_id_max; ++rarity)
@@ -510,10 +509,10 @@ static void crafting_xp_text_animate(struct rr_ui_element *this,
     case rr_rarity_id_cosmic:
         data->text = "900 Qa xp per craft";
         break;
-    case rr_rarity_id_ethereal:
+    case rr_rarity_id_galactic:
         data->text = "100 Sx xp per craft";
         break;
-    case rr_rarity_id_prime:
+    case rr_rarity_id_ethereal:
         data->text = "10 No xp per craft";
         break;
     }
@@ -700,9 +699,9 @@ static struct rr_ui_element *toggle_autocraft_button_init(struct rr_game *game)
 struct rr_ui_element *rr_ui_crafting_container_init(struct rr_game *game)
 {
     struct rr_ui_element *this =
-        rr_ui_2d_container_init(rr_rarity_id_max, 6, 15, 15);
+        rr_ui_2d_container_init(rr_rarity_id_ethereal, 6, 15, 15);
     for (uint8_t id = 1; id <= rr_petal_id_max - 1; ++id)
-        for (uint8_t rarity = 0; rarity < rr_rarity_id_max; ++rarity)
+        for (uint8_t rarity = 0; rarity < rr_rarity_id_ethereal; ++rarity)
             rr_ui_container_add_element(
                 this, crafting_inventory_button_init(id, rarity));
     rr_ui_set_background(this, 0x00000000);

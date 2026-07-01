@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -133,6 +132,7 @@ struct rr_dev_cheats
     uint8_t no_wall_collision;
     uint8_t no_collision;
     uint8_t no_grid_influence;
+    uint8_t no_drop;
     float speed_percent;
     float fov_percent;
     uint8_t flags_last_tick;

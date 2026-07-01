@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -499,8 +498,8 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_scale(renderer, 1 / 0.5);
             break;
         case rr_petal_id_uranium:
-            rr_renderer_set_fill(renderer, 0xff63bf2e);
-            rr_renderer_set_stroke(renderer, 0xff509b25);
+            rr_renderer_set_fill(renderer, 0xff418c27);
+            rr_renderer_set_stroke(renderer, 0xff36781f);
             rr_renderer_set_line_cap(renderer, 1);
             rr_renderer_set_line_join(renderer, 1);
             rr_renderer_set_line_width(renderer, 3);
@@ -1576,6 +1575,45 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_bezier_curve_to(renderer, 248.975, 242.596, 248.279, 241.685, 248.755, 240.972);
             rr_renderer_fill(renderer);
             break;
+        case rr_petal_id_living_fire:
+            rr_renderer_scale(renderer, 0.16f);
+            rr_renderer_set_fill(renderer, 0xffb71c1c);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_move_to(renderer, 0.0f, 120.0f);
+            rr_renderer_bezier_curve_to(renderer, 55.0f, 100.0f, 70.0f,
+                                        40.0f, 45.0f, -25.0f);
+            rr_renderer_bezier_curve_to(renderer, 80.0f, -45.0f, 60.0f,
+                                        -110.0f, 20.0f, -150.0f);
+            rr_renderer_bezier_curve_to(renderer, 0.0f, -170.0f, -20.0f,
+                                        -150.0f, -45.0f, -110.0f);
+            rr_renderer_bezier_curve_to(renderer, -80.0f, -45.0f, -55.0f,
+                                        20.0f, 0.0f, 120.0f);
+            rr_renderer_fill(renderer);
+            rr_renderer_set_fill(renderer, 0xffff5722);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_move_to(renderer, 0.0f, 90.0f);
+            rr_renderer_bezier_curve_to(renderer, 35.0f, 70.0f, 45.0f,
+                                        30.0f, 30.0f, -15.0f);
+            rr_renderer_bezier_curve_to(renderer, 55.0f, -25.0f, 45.0f,
+                                        -70.0f, 15.0f, -100.0f);
+            rr_renderer_bezier_curve_to(renderer, 0.0f, -118.0f, -15.0f,
+                                        -100.0f, -30.0f, -70.0f);
+            rr_renderer_bezier_curve_to(renderer, -45.0f, -25.0f, -35.0f,
+                                        25.0f, 0.0f, 90.0f);
+            rr_renderer_fill(renderer);
+            rr_renderer_set_fill(renderer, 0xfffff176);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_move_to(renderer, 0.0f, 60.0f);
+            rr_renderer_bezier_curve_to(renderer, 25.0f, 42.0f, 30.0f,
+                                        18.0f, 18.0f, -5.0f);
+            rr_renderer_bezier_curve_to(renderer, 35.0f, -10.0f, 25.0f,
+                                        -45.0f, 8.0f, -65.0f);
+            rr_renderer_bezier_curve_to(renderer, 0.0f, -75.0f, -8.0f,
+                                        -65.0f, -25.0f, -45.0f);
+            rr_renderer_bezier_curve_to(renderer, -35.0f, -10.0f, -28.0f,
+                                        18.0f, 0.0f, 60.0f);
+            rr_renderer_fill(renderer);
+            break;
         case rr_petal_id_meat:
             rr_renderer_scale(renderer, 0.12);
             rr_renderer_rotate(renderer, M_PI / 2);
@@ -1635,6 +1673,29 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
         case rr_petal_id_meteor:
             rr_renderer_scale(renderer, 0.2f);
             rr_meteor_draw(renderer);
+            break;
+        case rr_petal_id_shiny_meteor:
+            rr_renderer_scale(renderer, 0.2f);
+            rr_shiny_meteor_draw(renderer);
+            break;
+        case rr_petal_id_square:
+            rr_renderer_scale(renderer, 0.2f);
+            rr_renderer_rotate(renderer, 35.0f);
+            rr_square_draw(renderer);
+            break;
+        case rr_petal_id_obsidian:
+            rr_renderer_set_stroke(renderer, 0xff111111);
+            rr_renderer_set_fill(renderer, 0xff000000);
+            rr_renderer_set_line_width(renderer, 3.0f);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_move_to(renderer, -6.5f, -6.5f);
+            rr_renderer_quadratic_curve_to(renderer, 0.0f, -9.75f, 6.5f, -6.5f);
+            rr_renderer_quadratic_curve_to(renderer, 9.25f, -2.75f, 9.75f, 5.75f);
+            rr_renderer_quadratic_curve_to(renderer, 7.75f, 9.25f, 0.0f, 10.0f);
+            rr_renderer_quadratic_curve_to(renderer, -7.75f, 9.25f, -9.75f, 5.75f);
+            rr_renderer_quadratic_curve_to(renderer, -9.25f, -2.75f, -6.5f, -6.5f);
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
             break;
         case rr_petal_id_mandible:
             rr_renderer_scale(renderer, 0.09);
@@ -2246,6 +2307,7 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_stroke(renderer);
             break;
         case rr_petal_id_ruby:
+        /*
             rr_renderer_set_fill(renderer, 0xffeb5b4b);
             rr_renderer_set_stroke(renderer, 0xffb34230);
             rr_renderer_set_line_cap(renderer, 1);
@@ -2256,12 +2318,37 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_line_to(renderer, -10.00, 9.00);
             rr_renderer_line_to(renderer, 10.00, 9.00);
             rr_renderer_line_to(renderer, 0.00, -9.00);
-            /*
-            rr_renderer_move_to(renderer, 0.00, 9.00);
-            rr_renderer_line_to(renderer, 9.00, -9.00);
-            rr_renderer_line_to(renderer, -9.00, -9.00);
-            rr_renderer_line_to(renderer, 0.00, 9.00);
-            */
+
+            //rr_renderer_move_to(renderer, 0.00, 9.00);
+            //rr_renderer_line_to(renderer, 9.00, -9.00);
+            //rr_renderer_line_to(renderer, -9.00, -9.00);
+            //rr_renderer_line_to(renderer, 0.00, 9.00);
+
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            break;
+        */
+            rr_renderer_set_stroke(renderer, 0xffb34230);
+            rr_renderer_set_fill(renderer, 0xffeb5b4b);
+            rr_renderer_rotate(renderer, M_PI / 2.25);
+            rr_renderer_set_line_width(renderer, 3.0f);
+            rr_renderer_begin_path(renderer);
+
+            const float radius_ruby = 10.0f;
+            const int num_vertices_ruby = 3;
+            const float angle_increment_ruby = 2.0f * M_PI / num_vertices_ruby;
+            for (int i = 0; i < num_vertices_ruby; ++i) {
+                float angle = i * angle_increment_ruby; 
+                float x = radius_ruby * cos(angle);
+                float y = radius_ruby * sin(angle);
+                if (i == 0) {
+                    rr_renderer_move_to(renderer, x, y);
+                } else {
+                    rr_renderer_line_to(renderer, x, y);
+                }
+            }
+            rr_renderer_line_to(renderer, radius_ruby * cos(0.0f), radius_ruby * sin(0.0f)); 
+            
             rr_renderer_fill(renderer);
             rr_renderer_stroke(renderer);
             break;
@@ -2413,81 +2500,58 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_fill(renderer);
             rr_renderer_scale(renderer, 1 / 0.2);
             break;
-        case rr_petal_id_emerald_leaf:
-            rr_renderer_scale(renderer, 0.2);
-            rr_renderer_rotate(renderer, M_PI * 3 / 4);
-            rr_renderer_set_fill(renderer, 0xff88e38a);
+        case rr_petal_id_emerald_amulet:
+            rr_renderer_set_stroke(renderer, 0xff303030);
+            rr_renderer_set_fill(renderer, 0xFF404040);
+            rr_renderer_rotate(renderer, M_PI / 2);
+            rr_renderer_set_line_width(renderer, 3.0f);
             rr_renderer_begin_path(renderer);
-            rr_renderer_move_to(renderer, -42.50, 42.73);
-            rr_renderer_bezier_curve_to(renderer, -66.06, 19.17, -66.06, -19.02,
-                                        -42.50, -42.58);
-            rr_renderer_bezier_curve_to(renderer, -31.19, -53.89, -15.85,
-                                        -60.24, 0.15, -60.24);
-            rr_renderer_bezier_curve_to(renderer, 16.15, -60.24, 31.49, -53.89,
-                                        42.80, -42.58);
-            rr_renderer_bezier_curve_to(renderer, 66.36, -19.02, 66.36, 19.17,
-                                        42.80, 42.73);
-            rr_renderer_bezier_curve_to(renderer, 19.25, 66.28, -18.94, 66.28,
-                                        -42.50, 42.73);
+
+            const float radius_amulet = 15.0f;
+            const int num_vertices_amulet = 7;
+            const float angle_increment_amulet = 2.0f * M_PI / num_vertices_amulet;
+            for (int i = 0; i < num_vertices_amulet; ++i) {
+                float angle = i * angle_increment_amulet; 
+                float x = radius_amulet * cos(angle);
+                float y = radius_amulet * sin(angle);
+                if (i == 0) {
+                    rr_renderer_move_to(renderer, x, y);
+                } else {
+                    rr_renderer_line_to(renderer, x, y);
+                }
+            }
+            rr_renderer_line_to(renderer, radius_amulet * cos(0.0f), radius_amulet * sin(0.0f)); 
+            
             rr_renderer_fill(renderer);
-            rr_renderer_set_fill(renderer, 0xff88e38a);
-            rr_renderer_begin_path(renderer);
-            rr_renderer_move_to(renderer, -59.02, -30.14);
-            rr_renderer_bezier_curve_to(renderer, -67.01, -38.14, -67.01,
-                                        -51.09, -59.02, -59.09);
-            rr_renderer_bezier_curve_to(renderer, -55.18, -62.93, -49.97,
-                                        -65.08, -44.55, -65.08);
-            rr_renderer_bezier_curve_to(renderer, -39.12, -65.08, -33.91,
-                                        -62.93, -30.07, -59.09);
-            rr_renderer_bezier_curve_to(renderer, -22.08, -51.09, -22.08,
-                                        -38.14, -30.07, -30.14);
-            rr_renderer_bezier_curve_to(renderer, -38.07, -22.15, -51.03,
-                                        -22.15, -59.02, -30.14);
-            rr_renderer_fill(renderer);
-            rr_renderer_set_fill(renderer, 0xff88e38a);
-            rr_renderer_begin_path(renderer);
-            rr_renderer_move_to(renderer, 4.38, -59.34);
-            rr_renderer_line_to(renderer, -41.83, -64.86);
-            rr_renderer_line_to(renderer, -29.53, -48.03);
-            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+
+            
+            rr_renderer_set_stroke(renderer, 0xff88e38a);
             rr_renderer_set_fill(renderer, 0xffa3f7a5);
+            rr_renderer_rotate(renderer, M_PI / 2);
+            rr_renderer_set_line_width(renderer, 3.0f);
             rr_renderer_begin_path(renderer);
-            rr_renderer_move_to(renderer, 0.06, 42.80);
-            rr_renderer_bezier_curve_to(renderer, -23.49, 42.80, -42.58, 23.71,
-                                        -42.58, 0.16);
-            rr_renderer_quadratic_curve_to(renderer, -42.58, -23.57, -47.40,
-                                           -47.29);
-            rr_renderer_quadratic_curve_to(renderer, -23.67, -42.47, 0.06,
-                                           -42.47);
-            rr_renderer_bezier_curve_to(renderer, 23.61, -42.47, 42.69, -23.39,
-                                        42.69, 0.16);
-            rr_renderer_bezier_curve_to(renderer, 42.69, 23.71, 23.61, 42.80,
-                                        0.06, 42.80);
+
+            const float radius_amulet_square = 7.0f;
+            const int num_vertices_amulet_square = 4;
+            const float angle_increment_amulet_square = 2.0f * M_PI / num_vertices_amulet_square;
+            for (int i = 0; i < num_vertices_amulet_square; ++i) {
+                float angle = i * angle_increment_amulet_square; 
+                float x = radius_amulet_square * cos(angle);
+                float y = radius_amulet_square * sin(angle);
+                if (i == 0) {
+                    rr_renderer_move_to(renderer, x, y);
+                } else {
+                    rr_renderer_line_to(renderer, x, y);
+                }
+            }
+            rr_renderer_line_to(renderer, radius_amulet_square * cos(0.0f), radius_amulet_square * sin(0.0f)); 
+            
             rr_renderer_fill(renderer);
-            rr_renderer_set_fill(renderer, 0xff88e38a);
-            rr_renderer_begin_path(renderer);
-            rr_renderer_move_to(renderer, -17.00, -3.60);
-            rr_renderer_bezier_curve_to(renderer, -20.72, -7.33, -20.72, -13.36,
-                                        -17.00, -17.08);
-            rr_renderer_bezier_curve_to(renderer, -15.22, -18.87, -12.79,
-                                        -19.87, -10.27, -19.87);
-            rr_renderer_bezier_curve_to(renderer, -7.74, -19.87, -5.32, -18.87,
-                                        -3.53, -17.08);
-            rr_renderer_line_to(renderer, 59.09, 45.54);
-            rr_renderer_bezier_curve_to(renderer, 62.81, 49.26, 62.81, 55.29,
-                                        59.09, 59.02);
-            rr_renderer_bezier_curve_to(renderer, 55.37, 62.74, 49.34, 62.74,
-                                        45.62, 59.02);
-            rr_renderer_fill(renderer);
-            rr_renderer_set_fill(renderer, 0xff88e38a);
-            rr_renderer_begin_path(renderer);
-            rr_renderer_move_to(renderer, -59.44, 4.49);
-            rr_renderer_line_to(renderer, -64.96, -41.73);
-            rr_renderer_line_to(renderer, -48.13, -29.42);
-            rr_renderer_fill(renderer);
-            rr_renderer_scale(renderer, 1 / 0.2);
+            rr_renderer_stroke(renderer);
             break;
-        case rr_petal_id_amethyst_leaf:
+            break;
+        case rr_petal_id_dev_leaf:
             rr_renderer_scale(renderer, 0.2);
             rr_renderer_rotate(renderer, M_PI * 3 / 4);
             rr_renderer_set_fill(renderer, 0xffa647cc);
@@ -2581,20 +2645,20 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_set_line_width(renderer, 3.0f);
             rr_renderer_begin_path(renderer);
 
-            const float radius = 15.0f;
-            const int num_vertices = 5;
-            const float angle_increment = 2.0f * 3.14159265358979323846f / num_vertices;
-            for (int i = 0; i < num_vertices; ++i) {
-                float angle = i * angle_increment; 
-                float x = radius * cos(angle);
-                float y = radius * sin(angle);
+            const float radius_rock = 15.0f;
+            const int num_vertices_rock = 5;
+            const float angle_increment_rock = 2.0f * M_PI / num_vertices_rock;
+            for (int i = 0; i < num_vertices_rock; ++i) {
+                float angle = i * angle_increment_rock; 
+                float x = radius_rock * cos(angle);
+                float y = radius_rock * sin(angle);
                 if (i == 0) {
                     rr_renderer_move_to(renderer, x, y);
                 } else {
                     rr_renderer_line_to(renderer, x, y);
                 }
             }
-            rr_renderer_line_to(renderer, radius * cos(0.0f), radius * sin(0.0f)); 
+            rr_renderer_line_to(renderer, radius_rock * cos(0.0f), radius_rock * sin(0.0f)); 
             
             rr_renderer_fill(renderer);
             rr_renderer_stroke(renderer);
@@ -2650,6 +2714,79 @@ void rr_renderer_draw_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_bezier_curve_to(renderer, -58.489391, 2.7048877999999927, -58.489391, -2.829185400000007, -55.076077999999995, -6.242499900000007);
             rr_renderer_fill(renderer);
             break;
+        case rr_petal_id_emerald:
+            rr_renderer_set_stroke(renderer, 0xff31bf2c);
+            rr_renderer_set_fill(renderer, 0xff40de3a);
+            rr_renderer_set_line_width(renderer, 3.0f);
+            rr_renderer_begin_path(renderer);
+
+            const float radius_emerald = 9.25f;
+            const int num_vertices_emerald = 6;
+            const float angle_increment_emerald = 2.0f * M_PI / num_vertices_emerald;
+            for (int i = 0; i < num_vertices_emerald; ++i) {
+                float angle = i * angle_increment_emerald;
+                float x = radius_emerald * cos(angle);
+                float y = radius_emerald * sin(angle);
+                if (i == 0) {
+                    rr_renderer_move_to(renderer, x, y);
+                } else {
+                    rr_renderer_line_to(renderer, x, y);
+                }
+            }
+            rr_renderer_line_to(renderer, radius_emerald, 0.0f);
+
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            break;
+        case rr_petal_id_opal: {
+            // Opal with iridescent effect - oval shape with rainbow-like color bands
+            const float opal_width = 14.0f;
+            const float opal_height = 11.0f;
+            
+            // Draw opal with multiple color bands for iridescent effect
+            // Band 1: Purple/Violet
+            rr_renderer_set_fill(renderer, 0xff9d4edd);
+            rr_renderer_set_stroke(renderer, 0xff6a0dad);
+            rr_renderer_set_line_width(renderer, 2.0f);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_ellipse(renderer, 0, 0, opal_width * 0.3f, opal_height * 0.4f);
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            
+            // Band 2: Blue
+            rr_renderer_set_fill(renderer, 0xff3a86ff);
+            rr_renderer_set_stroke(renderer, 0xff023e8a);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_ellipse(renderer, 2.5f, -2.0f, opal_width * 0.35f, opal_height * 0.38f);
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            
+            // Band 3: Green
+            rr_renderer_set_fill(renderer, 0xff06ffa5);
+            rr_renderer_set_stroke(renderer, 0xff05b384);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_ellipse(renderer, -2.5f, 2.0f, opal_width * 0.32f, opal_height * 0.42f);
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            
+            // Band 4: Orange/Yellow
+            rr_renderer_set_fill(renderer, 0xffffa500);
+            rr_renderer_set_stroke(renderer, 0xffff8c00);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_ellipse(renderer, -1.5f, -1.5f, opal_width * 0.28f, opal_height * 0.35f);
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            
+            // Main outer opal outline - lighter iridescent color
+            rr_renderer_set_fill(renderer, 0xffe0aaff);
+            rr_renderer_set_stroke(renderer, 0xff8b5cf6);
+            rr_renderer_set_line_width(renderer, 3.0f);
+            rr_renderer_begin_path(renderer);
+            rr_renderer_ellipse(renderer, 0, 0, opal_width, opal_height);
+            rr_renderer_fill(renderer);
+            rr_renderer_stroke(renderer);
+            break;
+        }
         default:
             break;
         }
@@ -2674,9 +2811,7 @@ void rr_renderer_draw_static_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_rotate(renderer, -1.0f);
         else if (id == rr_petal_id_diamond_leaf)
             rr_renderer_rotate(renderer, -1.0f);
-        else if (id == rr_petal_id_emerald_leaf)
-            rr_renderer_rotate(renderer, -1.0f);
-        else if (id == rr_petal_id_amethyst_leaf)
+        else if (id == rr_petal_id_dev_leaf)
             rr_renderer_rotate(renderer, -1.0f);
         else if (id == rr_petal_id_magnet)
             rr_renderer_rotate(renderer, -1.0f);
@@ -2690,9 +2825,13 @@ void rr_renderer_draw_static_petal(struct rr_renderer *renderer, uint8_t id,
             rr_renderer_rotate(renderer, 1.0f);
         else if (id == rr_petal_id_lightning)
             rr_renderer_rotate(renderer, 1.0f);
-        else if (id == rr_petal_id_fireball)
+        else if (id == rr_petal_id_fireball || id == rr_petal_id_living_fire)
             rr_renderer_rotate(renderer, -1.0f + M_PI);
         else if (id == rr_petal_id_meteor)
+            rr_renderer_rotate(renderer, -M_PI / 4);
+        else if (id == rr_petal_id_shiny_meteor)
+            rr_renderer_rotate(renderer, -M_PI / 4);
+        else if (id == rr_petal_id_square)
             rr_renderer_rotate(renderer, -M_PI / 4);
         else if (id == rr_petal_id_mandible)
             rr_renderer_rotate(renderer, -1.0f);

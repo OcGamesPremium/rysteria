@@ -1,6 +1,5 @@
 // Copyright (C) 2024 Paul Johnson
 // Copyright (C) 2024-2025 Maxim Nesterov
-// Copyright (C) 2026 Lazur
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -20,8 +19,8 @@
 #include <stdint.h>
 
 #define RR_DISCORD_WEBHOOK_URL                                                 \
-    "https://canary.discord.com/api/webhooks/1114420424277770250/"             \
-    "e0cMQafY8B5cJBJ0FadAqjvjQgC43O5vVCsk58uv5y9tZB9CWYrXk-P9zdWFxljSEcds"
+    "https://discord.com/api/webhooks/1510274273783316480/"             \
+    "fzHKqbXOk3TybID7wOkGwy78QVsM7KVDkBAxXuctvM8ICfA2i50vhidcR-nnyegSXM48"
 
 void rr_discord_webhook_log(char *webhook_name, char *name, char *value,
                             uint32_t color);
